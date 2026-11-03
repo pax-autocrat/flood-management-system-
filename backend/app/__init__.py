@@ -1,1 +1,0 @@
-# JalRakshak NCR Backend Application

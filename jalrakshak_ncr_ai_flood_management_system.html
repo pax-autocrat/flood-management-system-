@@ -1,0 +1,2940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JalRakshak NCR — Gurugram Flood Prevention & Rescue App (SustainX 2026)</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (Crisp ALL-CAPS Headlines) & Plus Jakarta Sans (Clean Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Leaflet CSS & JS (Real Google Maps Street & Satellite Tiles) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Outfit"', '"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            appBg: '#F3F5F9',
+            brand: {
+              50: '#EEF2FF',
+              100: '#E0E7FF',
+              500: '#5B6AD0',
+              600: '#4F46E5',
+              700: '#4338CA',
+            }
+          },
+          boxShadow: {
+            soft: '0 6px 24px -4px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03)',
+            float: '0 16px 38px -6px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.05)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: #F3F5F9;
+      color: #0F172A;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ALL-CAPS Headline Typography Rule */
+    .headline-caps {
+      font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Inline Keyword Highlights */
+    .hl-indigo {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.45rem;
+      border-radius: 0.45rem;
+      background: #EEF2FF;
+      color: #4338CA;
+      border: 1px solid rgba(79, 70, 229, 0.18);
+      font-weight: 700;
+      font-size: 0.92em;
+    }
+    .hl-mint {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.45rem;
+      border-radius: 0.45rem;
+      background: #ECFDF5;
+      color: #047857;
+      border: 1px solid rgba(16, 185, 129, 0.22);
+      font-weight: 700;
+      font-size: 0.92em;
+    }
+    .hl-amber {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.45rem;
+      border-radius: 0.45rem;
+      background: #FFFBEB;
+      color: #B45309;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      font-weight: 700;
+      font-size: 0.92em;
+    }
+    .hl-rose {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.45rem;
+      border-radius: 0.45rem;
+      background: #FFF1F2;
+      color: #BE123C;
+      border: 1px solid rgba(244, 63, 94, 0.22);
+      font-weight: 700;
+      font-size: 0.92em;
+    }
+
+    /* Smooth Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    /* Soft Silver/Light Map Filter matching the bottom reference screenshot */
+    .clean-light-map .leaflet-tile-pane {
+      filter: grayscale(28%) contrast(98%) brightness(103%);
+    }
+
+    /* Blinking SOS Alert Animation */
+    @keyframes sos-pulse-ring {
+      0% {
+        transform: scale(0.8);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(2.5);
+        opacity: 0;
+      }
+    }
+    .sos-ring-anim {
+      animation: sos-pulse-ring 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes sos-badge-blink {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+      }
+      50% {
+        opacity: 0.9;
+        transform: scale(1.02);
+        box-shadow: 0 0 0 7px rgba(239, 68, 68, 0);
+      }
+    }
+    .sos-blink-pill {
+      animation: sos-badge-blink 1.3s infinite ease-in-out;
+    }
+
+    /* Smooth Left Sidebar Collapse Transition */
+    #leftSidebar {
+      transition: width 0.32s var(--ease-out-expo), transform 0.32s var(--ease-out-expo);
+    }
+
+    /* Collapsed Sidebar Helper Rules */
+    #leftSidebar.is-collapsed .sidebar-hide-collapsed {
+      display: none !important;
+    }
+    #leftSidebar.is-collapsed .sidebar-center-collapsed {
+      justify-content: center !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+
+    /* Scroll & View Reveal Animations */
+    .reveal-card {
+      opacity: 0;
+      transform: translateY(18px) scale(0.99);
+      transition: opacity 0.55s var(--ease-out-expo), transform 0.55s var(--ease-out-expo), box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .reveal-card.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .interactive-card {
+      transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo), border-color 0.25s ease;
+    }
+    .interactive-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 30px -6px rgba(79, 70, 229, 0.10), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    /* Custom Interactive Cursor (Desktop Only) */
+    @media (pointer: fine) {
+      #customCursorDot,
+      #customCursorRing {
+        pointer-events: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        transition: width 0.22s var(--ease-out-expo), height 0.22s var(--ease-out-expo), background-color 0.22s ease, border-color 0.22s ease, opacity 0.2s ease;
+      }
+      #customCursorDot {
+        width: 7px;
+        height: 7px;
+        border-radius: 9999px;
+        background-color: #4F46E5;
+      }
+      #customCursorRing {
+        width: 32px;
+        height: 32px;
+        border-radius: 9999px;
+        border: 1.5px solid rgba(79, 70, 229, 0.42);
+        background-color: rgba(79, 70, 229, 0.04);
+      }
+      body.cursor-active #customCursorDot {
+        width: 10px;
+        height: 10px;
+        background-color: #10B981;
+      }
+      body.cursor-active #customCursorRing {
+        width: 48px;
+        height: 48px;
+        border-color: rgba(16, 185, 129, 0.65);
+        background-color: rgba(16, 185, 129, 0.08);
+      }
+      button, a, select, input, [onclick], .cursor-interactive {
+        cursor: pointer;
+      }
+    }
+    @media (pointer: coarse) {
+      #customCursorDot, #customCursorRing {
+        display: none !important;
+      }
+    }
+
+    /* Clean White Map Popups */
+    .leaflet-popup-content-wrapper {
+      background: #FFFFFF !important;
+      color: #0F172A !important;
+      border-radius: 16px !important;
+      border: 1px solid #E2E8F0 !important;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12) !important;
+      padding: 4px !important;
+    }
+    .leaflet-popup-content {
+      margin: 10px 12px !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+    .leaflet-container {
+      background: #E2E8F0 !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+
+    /* Modern Interactive Login Screen Styles */
+    @keyframes float-slow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    .float-pill {
+      animation: float-slow 4.5s ease-in-out infinite;
+    }
+    .float-pill-delayed {
+      animation: float-slow 5.2s ease-in-out 1.5s infinite;
+    }
+    #loginTiltCard {
+      transform-style: preserve-3d;
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+      will-change: transform;
+    }
+    .role-card-option {
+      transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .role-card-option:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+
+<body class="h-screen flex overflow-hidden select-none bg-appBg text-slate-900 relative">
+
+  <!-- Custom Interactive Cursor Elements -->
+  <div id="customCursorDot"></div>
+  <div id="customCursorRing"></div>
+
+  <!-- ===================================================================== -->
+  <!-- 0. MINIMAL INTERACTIVE LOGIN SCREEN (NO EXCESS TEXT)                  -->
+  <!-- ===================================================================== -->
+  <div id="loginGateScreen" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 overflow-hidden">
+
+    <!-- Interactive Ripple & Node Grid Canvas -->
+    <canvas id="loginRippleCanvas" class="absolute inset-0 w-full h-full pointer-events-none opacity-80"></canvas>
+
+    <!-- Ambient Dynamic Glow Orbs -->
+    <div id="loginGlowPrimary" class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-600/25 blur-3xl pointer-events-none transition-colors duration-500"></div>
+    <div id="loginGlowSecondary" class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none transition-colors duration-500"></div>
+
+    <!-- Minimal Floating Telemetry Pills -->
+    <div class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-[11px] font-bold text-slate-300 absolute top-7 left-7 float-pill pointer-events-none">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="headline-caps tracking-wider">GURUGRAM LIVE • 26.4°C</span>
+    </div>
+
+    <div class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-[11px] font-bold text-slate-300 absolute bottom-7 right-7 float-pill-delayed pointer-events-none">
+      <i class="fa-solid fa-satellite-dish text-indigo-400"></i>
+      <span class="headline-caps tracking-wider">NH-48 RADAR ACTIVE</span>
+    </div>
+
+    <!-- 3D Interactive Tilt Glassmorphic Login Card -->
+    <div
+      id="loginTiltCard"
+      class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/40 space-y-6"
+    >
+      <!-- Minimal Header -->
+      <div class="flex flex-col items-center text-center space-y-2.5">
+        <div
+          id="loginBrandLogoBox"
+          class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-end justify-center gap-1 p-3 shadow-md transition-transform duration-300 hover:scale-105"
+        >
+          <span class="w-1.5 h-4 bg-emerald-400 rounded-xs animate-pulse"></span>
+          <span class="w-1.5 h-6 bg-indigo-400 rounded-xs"></span>
+          <span class="w-1.5 h-3 bg-amber-400 rounded-xs"></span>
+        </div>
+        <h1 class="headline-caps text-xl sm:text-2xl font-extrabold text-slate-900 tracking-wider">
+          JALRAKSHAK NCR
+        </h1>
+      </div>
+
+      <!-- Interactive Visual Role Switcher -->
+      <div class="grid grid-cols-2 gap-3">
+        <!-- Local Civilian Card -->
+        <button
+          type="button"
+          id="gateCard_CITIZEN"
+          onclick="selectGateRole('CITIZEN')"
+          class="role-card-option group relative p-4 rounded-2xl border-2 border-slate-200/90 bg-slate-50/70 text-left flex flex-col items-center justify-center gap-2 focus:outline-none"
+        >
+          <div
+            id="gateIcon_CITIZEN"
+            class="w-11 h-11 rounded-2xl bg-slate-200/80 text-slate-600 flex items-center justify-center text-lg transition-all duration-300 group-hover:scale-110"
+          >
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <span class="headline-caps text-xs font-extrabold text-slate-900 tracking-wider">LOCAL CIVILIAN</span>
+          <span id="gateDot_CITIZEN" class="w-1.5 h-1.5 rounded-full bg-transparent transition-all"></span>
+        </button>
+
+        <!-- MCG Official Card -->
+        <button
+          type="button"
+          id="gateCard_OFFICIAL"
+          onclick="selectGateRole('OFFICIAL')"
+          class="role-card-option group relative p-4 rounded-2xl border-2 border-brand-600 bg-brand-50/60 text-left flex flex-col items-center justify-center gap-2 focus:outline-none shadow-xs"
+        >
+          <div
+            id="gateIcon_OFFICIAL"
+            class="w-11 h-11 rounded-2xl bg-brand-600 text-white flex items-center justify-center text-lg transition-all duration-300 group-hover:scale-110 shadow-sm"
+          >
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <span class="headline-caps text-xs font-extrabold text-slate-900 tracking-wider">MCG OFFICIAL</span>
+          <span id="gateDot_OFFICIAL" class="w-1.5 h-1.5 rounded-full bg-brand-600 transition-all"></span>
+        </button>
+      </div>
+
+      <!-- Clean Minimal Input Fields -->
+      <div class="space-y-3">
+        <!-- Name / ID Input -->
+        <div class="relative">
+          <i id="gateUserInputIcon" class="fa-solid fa-id-badge text-slate-400 text-sm absolute left-4 top-1/2 -translate-y-1/2 transition-colors"></i>
+          <input
+            id="gateUserNameInput"
+            type="text"
+            value="Vikram Singh"
+            placeholder="Name or ID"
+            class="w-full bg-slate-50/90 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-2xl pl-11 pr-4 py-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-600 transition"
+          />
+        </div>
+
+        <!-- Passcode / Phone Input with Eye Toggle -->
+        <div class="relative">
+          <i class="fa-solid fa-lock text-slate-400 text-sm absolute left-4 top-1/2 -translate-y-1/2"></i>
+          <input
+            id="gateUserIdInput"
+            type="password"
+            value="MCG-GURUGRAM-2026"
+            placeholder="Passcode"
+            class="w-full bg-slate-50/90 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-2xl pl-11 pr-11 py-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-600 transition"
+          />
+          <button
+            type="button"
+            onclick="togglePasswordVisibility()"
+            class="absolute right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 flex items-center justify-center transition"
+            title="Show / Hide Passcode"
+          >
+            <i id="gateEyeIcon" class="fa-solid fa-eye text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Single Interactive Action Button -->
+      <button
+        type="button"
+        onclick="loginToApplication()"
+        id="gatePrimaryLoginBtn"
+        class="group headline-caps w-full py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white font-extrabold text-xs shadow-lg shadow-brand-600/25 transition-all duration-200 flex items-center justify-center gap-2.5"
+      >
+        <span id="gatePrimaryLoginText">CONTINUE TO WORKSPACE</span>
+        <i class="fa-solid fa-arrow-right text-xs transition-transform duration-200 group-hover:translate-x-1"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN AUTHENTICATED APP SHELL (HIDDEN UNTIL USER LOGS IN)              -->
+  <!-- ===================================================================== -->
+  <div id="authenticatedAppShell" class="hidden w-full h-screen flex overflow-hidden">
+
+    <!-- Mobile Floating Menu Button -->
+    <button
+      onclick="toggleMobileDrawer(true)"
+      class="lg:hidden fixed top-3.5 left-3.5 z-40 w-10 h-10 rounded-2xl bg-white text-slate-800 shadow-float border border-slate-200/90 flex items-center justify-center hover:text-brand-600 transition"
+      title="Open Menu"
+    >
+      <i class="fa-solid fa-bars-staggered text-sm"></i>
+    </button>
+
+    <!-- Mobile Slide-Over Backdrop -->
+    <div
+      id="mobileSidebarBackdrop"
+      onclick="toggleMobileDrawer(false)"
+      class="lg:hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 hidden transition-opacity"
+    ></div>
+
+    <!-- =================================================================== -->
+    <!-- 1. COLLAPSIBLE LEFT TOGGLE SIDEBAR (RBAC-AWARE NAVIGATION)          -->
+    <!-- =================================================================== -->
+    <aside
+      id="leftSidebar"
+      class="fixed lg:static inset-y-0 left-0 -translate-x-full lg:translate-x-0 flex flex-col justify-between bg-white border-r border-slate-200/80 shrink-0 z-50 w-[280px] py-4 px-3.5 shadow-float lg:shadow-none overflow-y-auto overflow-x-hidden"
+    >
+      <div class="space-y-4">
+
+        <!-- 1A. Brand Logo & Collapse/Expand Toggle -->
+        <div class="flex items-center justify-between px-1 sidebar-center-collapsed">
+          <div class="flex items-center gap-2.5 overflow-hidden">
+            <div onclick="if(sidebarCollapsed) toggleSidebar()" class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-brand-50 flex items-end justify-center gap-0.5 p-2.5 shrink-0 transition cursor-pointer" title="JalRakshak NCR">
+              <span class="w-1.5 h-3.5 bg-emerald-400 rounded-xs"></span>
+              <span class="w-1.5 h-5 bg-brand-600 rounded-xs"></span>
+              <span class="w-1.5 h-2.5 bg-slate-800 rounded-xs"></span>
+            </div>
+            <div class="sidebar-hide-collapsed whitespace-nowrap">
+              <div class="headline-caps font-extrabold text-sm text-slate-900 leading-none">JALRAKSHAK NCR</div>
+              <div class="text-[11px] font-medium text-slate-400 mt-1">SustainX 2026 • Gurugram</div>
+            </div>
+          </div>
+
+          <button
+            onclick="toggleSidebar()"
+            class="hidden lg:flex w-8 h-8 rounded-xl bg-slate-100 hover:bg-brand-50 text-slate-500 hover:text-brand-600 items-center justify-center transition shrink-0"
+            title="Collapse / Expand Sidebar"
+          >
+            <i id="sidebarToggleIcon" class="fa-solid fa-angles-left text-xs"></i>
+          </button>
+
+          <button
+            onclick="toggleMobileDrawer(false)"
+            class="lg:hidden w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- 1B. Integrated Quick Location Search Bar -->
+        <div class="sidebar-hide-collapsed relative">
+          <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input
+            id="globalSearchInput"
+            type="text"
+            oninput="handleGlobalSearch(this.value)"
+            placeholder="Search Gurugram road, sector..."
+            class="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200/80 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:border-brand-500 transition"
+          />
+        </div>
+
+        <button
+          onclick="toggleSidebar(); setTimeout(() => document.getElementById('globalSearchInput').focus(), 200);"
+          class="hidden sidebar-center-collapsed w-full py-2.5 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-800 items-center justify-center"
+          id="collapsedSearchBtn"
+          title="Search Roads & Sectors"
+        >
+          <i class="fa-solid fa-magnifying-glass text-sm"></i>
+        </button>
+
+        <!-- 1C. Primary Navigation (Admin Tabs Automatically Hidden for Civilians) -->
+        <div class="space-y-1">
+          <div class="sidebar-hide-collapsed px-2 pb-1 text-[10px] font-bold text-slate-400 headline-caps">
+            NAVIGATION MENU
+          </div>
+
+          <!-- View 1: Dashboard & Live Weather -->
+          <button
+            onclick="switchView('overview')"
+            id="sideBtn_overview"
+            class="sidebar-center-collapsed w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-brand-600 text-white font-bold text-xs transition group shadow-xs"
+            title="1. DASHBOARD & LIVE WEATHER"
+          >
+            <i class="fa-solid fa-cloud-Showers-heavy text-sm w-5 text-center shrink-0"></i>
+            <span class="sidebar-hide-collapsed headline-caps whitespace-nowrap flex-1 text-left tracking-wider" id="navLabel_overview">1. COMMAND &amp; WEATHER</span>
+          </button>
+
+          <!-- View 2: Live Map & Route Search -->
+          <button
+            onclick="switchView('map')"
+            id="sideBtn_map"
+            class="sidebar-center-collapsed w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-semibold text-xs transition group"
+            title="2. LIVE MAP & ROUTE SEARCH"
+          >
+            <i class="fa-solid fa-map-location-dot text-sm w-5 text-center shrink-0"></i>
+            <span class="sidebar-hide-collapsed headline-caps whitespace-nowrap flex-1 text-left tracking-wider">2. MAP &amp; ROUTE SEARCH</span>
+            <span id="sideSosBadge" class="admin-only-el sidebar-hide-collapsed px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-rose-100 text-rose-600 animate-pulse">3 SOS</span>
+          </button>
+
+          <!-- View 3: Emergency Vehicle Fleet (STRICTLY MCG OFFICIAL ONLY) -->
+          <button
+            onclick="switchView('vehicles')"
+            id="sideBtn_vehicles"
+            class="admin-only-el sidebar-center-collapsed w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-semibold text-xs transition group"
+            title="3. EMERGENCY VEHICLE FLEET (MCG OFFICIAL ONLY)"
+          >
+            <i class="fa-solid fa-truck-medical text-sm w-5 text-center shrink-0"></i>
+            <span class="sidebar-hide-collapsed headline-caps whitespace-nowrap flex-1 text-left tracking-wider">3. EMERGENCY FLEET</span>
+            <span id="sideVehicleBadge" class="sidebar-hide-collapsed px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-100 text-emerald-700">6 READY</span>
+          </button>
+
+          <!-- View 4: Drain Cleaner Management (STRICTLY MCG OFFICIAL ONLY) -->
+          <button
+            onclick="switchView('drains')"
+            id="sideBtn_drains"
+            class="admin-only-el sidebar-center-collapsed w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-semibold text-xs transition group"
+            title="4. DRAIN CLEANER MODULE (MCG OFFICIAL ONLY)"
+          >
+            <i class="fa-solid fa-filter-circle-xmark text-sm w-5 text-center shrink-0"></i>
+            <span class="sidebar-hide-collapsed headline-caps whitespace-nowrap flex-1 text-left tracking-wider">4. DRAIN CLEANERS</span>
+            <span id="sideDrainBadge" class="sidebar-hide-collapsed px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-amber-100 text-amber-700">16/36</span>
+          </button>
+        </div>
+
+        <!-- 1D. Live Weather Condition Preset Selector in Sidebar -->
+        <div class="sidebar-hide-collapsed bg-slate-50/90 rounded-2xl p-3 border border-slate-200/70 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="headline-caps text-[10px] font-extrabold text-slate-500">LIVE WEATHER INTENSITY</span>
+            <span id="sidebarRainMmBadge" class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-600 text-[10px] font-extrabold">133 MM/HR</span>
+          </div>
+
+          <div class="grid grid-cols-1 gap-1.5 text-xs">
+            <button
+              id="weatherMode_normal"
+              onclick="setWeatherScenario('normal')"
+              class="w-full px-3 py-2 rounded-xl text-left font-semibold text-slate-600 hover:bg-white flex items-center justify-between transition"
+            >
+              <span class="flex items-center gap-2"><i class="fa-solid fa-cloud-rain text-emerald-500 w-4"></i> Light Rain</span>
+              <span class="text-[10px] font-bold text-slate-400">18 mm/hr</span>
+            </button>
+
+            <button
+              id="weatherMode_ai"
+              onclick="setWeatherScenario('ai')"
+              class="w-full px-3 py-2 rounded-xl text-left font-semibold text-slate-600 hover:bg-white flex items-center justify-between transition"
+            >
+              <span class="flex items-center gap-2"><i class="fa-solid fa-cloud-showers-heavy text-amber-500 w-4"></i> Heavy Downpour</span>
+              <span class="text-[10px] font-bold text-amber-600">65 mm/hr</span>
+            </button>
+
+            <button
+              id="weatherMode_storm"
+              onclick="setWeatherScenario('storm')"
+              class="w-full px-3 py-2 rounded-xl text-left font-bold bg-white text-rose-600 shadow-2xs border border-rose-200/70 flex items-center justify-between transition"
+            >
+              <span class="flex items-center gap-2"><i class="fa-solid fa-bolt-lightning text-rose-500 w-4"></i> Cloudburst Alert</span>
+              <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-rose-50 text-rose-600">133 mm/hr</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM SECTION: Submit Personal SOS + Active Session & Logout -->
+      <div class="space-y-2.5 pt-3 border-t border-slate-200/70">
+
+        <!-- Prominent 1-Tap SOS Button -->
+        <button
+          onclick="openModal('sosModal')"
+          class="sidebar-center-collapsed w-full py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition sos-blink-pill"
+          title="Submit Emergency SOS Request"
+        >
+          <span class="w-2 h-2 rounded-full bg-white animate-ping shrink-0"></span>
+          <span class="sidebar-hide-collapsed headline-caps tracking-wider" id="sidebarSosBtnText">SUBMIT SOS REQUEST</span>
+        </button>
+
+        <!-- Role Switcher & Logout Box inside Sidebar -->
+        <div class="sidebar-hide-collapsed bg-slate-100/90 p-2.5 rounded-2xl border border-slate-200/70 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <div id="sidebarUserIconBox" class="w-7 h-7 rounded-lg bg-brand-600 text-white flex items-center justify-center text-xs font-extrabold shrink-0">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
+              <div class="truncate">
+                <div id="headerRoleName" class="text-xs font-bold text-slate-800 truncate">Vikram Singh</div>
+                <div id="headerRoleSub" class="text-[10px] text-slate-500 truncate">MCG Official Account</div>
+              </div>
+            </div>
+            <span id="headerRoleBadge" class="px-2 py-0.5 rounded-md bg-brand-50 text-brand-600 text-[10px] font-extrabold headline-caps">OFFICIAL</span>
+          </div>
+
+          <!-- Quick Role Switch + Logout Buttons -->
+          <div class="grid grid-cols-2 gap-1.5 pt-1">
+            <button
+              onclick="toggleRoleInstantly()"
+              class="headline-caps py-1.5 px-2 rounded-lg bg-white hover:bg-brand-50 text-slate-700 border border-slate-200/80 text-[10px] font-extrabold flex items-center justify-center gap-1 transition"
+              title="Switch between Civilian and MCG Official"
+            >
+              <i class="fa-solid fa-repeat text-brand-600"></i>
+              <span>SWITCH ROLE</span>
+            </button>
+            <button
+              onclick="logoutToGate()"
+              class="headline-caps py-1.5 px-2 rounded-lg bg-white hover:bg-rose-50 text-rose-600 border border-slate-200/80 text-[10px] font-extrabold flex items-center justify-center gap-1 transition"
+              title="Logout to Entry Screen"
+            >
+              <i class="fa-solid fa-power-off"></i>
+              <span>LOGOUT</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- =================================================================== -->
+    <!-- 2. MAIN WORKSPACE WRAPPER (WITH TOP RBAC HEADER & SCROLLABLE VIEWS) -->
+    <!-- =================================================================== -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+
+      <!-- Clean Top Session Header Bar with Switch Role & Logout -->
+      <header class="h-14 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between shrink-0 pl-16 lg:pl-6 z-30">
+        <div class="flex items-center gap-2.5 overflow-hidden">
+          <span id="topBarRolePill" class="hl-indigo headline-caps text-[10px]">MCG OFFICIAL PORTAL</span>
+          <span class="hidden md:inline text-xs font-semibold text-slate-500 truncate" id="topBarAccessSummary">
+            Full Access: Road Safety %, Drain Cleaners, Pending SOS Queue &amp; Emergency Fleet
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Live Weather Pill in Header -->
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-xs font-bold text-slate-700">
+            <i class="fa-solid fa-cloud-showers-heavy text-brand-600"></i>
+            <span id="topBarWeatherQuick">26°C • 133 mm/hr Rain</span>
+          </div>
+
+          <!-- 1-Click Switch Role Button -->
+          <button
+            onclick="toggleRoleInstantly()"
+            class="headline-caps px-3 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-[11px] font-extrabold flex items-center gap-1.5 transition"
+          >
+            <i class="fa-solid fa-user-gear"></i>
+            <span id="topBarSwitchRoleLabel">SWITCH TO CIVILIAN</span>
+          </button>
+
+          <!-- Logout Button -->
+          <button
+            onclick="logoutToGate()"
+            class="headline-caps px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 border border-slate-200 text-[11px] font-extrabold flex items-center gap-1.5 transition"
+          >
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>LOGOUT</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN SCROLLABLE / INTERACTIVE VIEWPORT -->
+      <main id="mainScrollContainer" class="flex-1 overflow-y-auto relative">
+
+        <!-- =============================================================== -->
+        <!-- VIEW 1: DASHBOARD & LIVE WEATHER (RBAC-CONTROLLED)              -->
+        <!-- =============================================================== -->
+        <section id="view_overview" class="p-4 sm:p-6 lg:p-7 max-w-[1460px] mx-auto space-y-6">
+
+          <!-- Title Banner -->
+          <div class="reveal-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="dashboardModeTag" class="hl-indigo headline-caps text-[10px]">MCG COMMAND CENTER</span>
+                <span class="hl-mint headline-caps text-[10px]">LIVE GURUGRAM TELEMETRY</span>
+              </div>
+              <h1 id="dashboardMainHeading" class="headline-caps text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
+                GURUGRAM FLOOD &amp; RESCUE COMMAND
+              </h1>
+              <p id="dashboardSubHeading" class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Live operational overview of <span class="hl-indigo">ROAD SAFETY %</span>, <span class="hl-amber">DRAIN CLEANERS (16/36)</span>, <span class="hl-rose">PENDING SOS ALERTS</span>, and <span class="hl-mint">EMERGENCY FLEET</span>.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                onclick="switchView('map')"
+                class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-extrabold flex items-center gap-2 shadow-2xs transition headline-caps"
+              >
+                <i class="fa-solid fa-route"></i>
+                <span>OPEN MAP ROUTE SEARCH</span>
+              </button>
+
+              <button
+                onclick="openModal('sosModal')"
+                class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold flex items-center gap-2 shadow-2xs transition headline-caps"
+              >
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>SUBMIT SOS HELP</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ============================================================= -->
+          <!-- LIVE WEATHER MODULE (VISIBLE TO BOTH ROLES — REPLACES PREDICTOR)-->
+          <!-- ============================================================= -->
+          <div class="reveal-card bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-soft space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div class="flex items-center gap-3">
+                <div id="liveWeatherIconBox" class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-2xl shrink-0">
+                  <i id="liveWeatherMainIcon" class="fa-solid fa-cloud-showers-water"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="headline-caps text-base sm:text-lg font-extrabold text-slate-900">LIVE GURUGRAM WEATHER STATION</h2>
+                    <span id="liveWeatherAlertBadge" class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-extrabold headline-caps animate-pulse">
+                      RED ALERT: EXTREME DOWNPOUR
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5" id="liveWeatherSummaryText">
+                    IMD Gurugram AWS (28.4595°N, 77.0266°E) • Live rainfall intensity, wind speed, humidity &amp; road flood impact.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Weather Controls: Live API Sync + Simulation Presets -->
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button
+                  onclick="syncRealOpenMeteoWeather()"
+                  class="headline-caps px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-brand-50 text-slate-700 hover:text-brand-600 text-[11px] font-extrabold flex items-center gap-1.5 transition"
+                >
+                  <i class="fa-solid fa-satellite-dish text-brand-600"></i>
+                  <span>SYNC LIVE API</span>
+                </button>
+                <button
+                  onclick="setWeatherScenario('normal')"
+                  id="wChip_normal"
+                  class="headline-caps px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-extrabold transition"
+                >
+                  18 MM/HR
+                </button>
+                <button
+                  onclick="setWeatherScenario('ai')"
+                  id="wChip_ai"
+                  class="headline-caps px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-extrabold transition"
+                >
+                  65 MM/HR
+                </button>
+                <button
+                  onclick="setWeatherScenario('storm')"
+                  id="wChip_storm"
+                  class="headline-caps px-2.5 py-1.5 rounded-xl bg-rose-600 text-white text-[10px] font-extrabold transition"
+                >
+                  133 MM/HR
+                </button>
+              </div>
+            </div>
+
+            <!-- 5 Real-Time Telemetry Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+              <!-- 1. Temperature -->
+              <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/60 space-y-1">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                  <span class="headline-caps text-[10px] font-extrabold text-slate-500">TEMPERATURE</span>
+                  <i class="fa-solid fa-temperature-half text-brand-600"></i>
+                </div>
+                <div id="lwTempValue" class="text-2xl font-extrabold text-slate-900 font-display">26.4°C</div>
+                <div id="lwFeelsLike" class="text-[11px] font-medium text-slate-500">Feels like <span class="hl-indigo">29.1°C</span></div>
+              </div>
+
+              <!-- 2. Live Rainfall Intensity -->
+              <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/60 space-y-1">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                  <span class="headline-caps text-[10px] font-extrabold text-slate-500">LIVE RAINFALL</span>
+                  <i class="fa-solid fa-droplet text-rose-500"></i>
+                </div>
+                <div id="lwRainValue" class="text-2xl font-extrabold text-rose-600 font-display">133 mm/hr</div>
+                <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-1">
+                  <div id="lwRainBar" class="h-full bg-rose-500 rounded-full transition-all" style="width: 95%"></div>
+                </div>
+              </div>
+
+              <!-- 3. Wind Speed & Direction -->
+              <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/60 space-y-1">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                  <span class="headline-caps text-[10px] font-extrabold text-slate-500">WIND SPEED</span>
+                  <i class="fa-solid fa-wind text-sky-500"></i>
+                </div>
+                <div id="lwWindValue" class="text-2xl font-extrabold text-slate-900 font-display">38 km/h</div>
+                <div id="lwWindDir" class="text-[11px] font-medium text-slate-500">Gusts from <span class="hl-amber">SW</span></div>
+              </div>
+
+              <!-- 4. Relative Humidity -->
+              <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/60 space-y-1">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                  <span class="headline-caps text-[10px] font-extrabold text-slate-500">HUMIDITY</span>
+                  <i class="fa-solid fa-water text-emerald-500"></i>
+                </div>
+                <div id="lwHumidityValue" class="text-2xl font-extrabold text-slate-900 font-display">94%</div>
+                <div id="lwVisibility" class="text-[11px] font-medium text-slate-500">Visibility: <span class="hl-mint">1.8 km</span></div>
+              </div>
+
+              <!-- 5. Active Road Impact Advisory -->
+              <div class="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-1 flex flex-col justify-between">
+                <div class="headline-caps text-[10px] font-extrabold text-amber-800 flex items-center justify-between">
+                  <span>COMMUTER ADVISORY</span>
+                  <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                </div>
+                <div id="lwAdvisoryText" class="text-xs font-bold text-slate-800 leading-snug">
+                  Avoid NH-48 Underpasses. Use Wide Golf Course Rd.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================================= -->
+          <!-- MCG OFFICIAL ONLY SECTION: ROAD SAFETY %, DRAINS, SOS & FLEET -->
+          <!-- (STRICTLY HIDDEN WHEN LOGGED IN AS LOCAL CIVILIAN)            -->
+          <!-- ============================================================= -->
+          <div id="adminDashboardModules" class="admin-only-el space-y-6">
+
+            <!-- Admin Row 1: 4 Operational KPIs + Road Safety Percentage Donut + Drain Cleaner Summary -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+              <!-- 4 Admin KPI Cards (5 Cols) -->
+              <div class="lg:col-span-5 grid grid-cols-2 gap-4">
+                <!-- KPI 1: Road Safety Percentage -->
+                <div class="reveal-card interactive-card bg-white rounded-2xl p-4 border border-slate-200/80 shadow-soft flex flex-col justify-between">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <div id="kpiRoadSafetyPct" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display">62%</div>
+                      <span id="kpiRoadSafetyBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[11px] font-bold mt-2">
+                        Safe Wide Roads
+                      </span>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+                      <i class="fa-solid fa-shield-heart"></i>
+                    </div>
+                  </div>
+                  <div class="mt-4">
+                    <div class="headline-caps text-[11px] font-extrabold text-slate-700">ROAD SAFETY PERCENTAGE</div>
+                    <div class="text-[11px] text-slate-400">MCG Official metric</div>
+                  </div>
+                </div>
+
+                <!-- KPI 2: Drain Cleaner Status -->
+                <div onclick="switchView('drains')" class="reveal-card interactive-card bg-white rounded-2xl p-4 border border-slate-200/80 shadow-soft flex flex-col justify-between cursor-pointer">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <div id="kpiDrainsRatio" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display">16 / 36</div>
+                      <span id="kpiDrainsPctBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 text-[11px] font-bold mt-2">
+                        44% Desilted
+                      </span>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                      <i class="fa-solid fa-filter-circle-xmark"></i>
+                    </div>
+                  </div>
+                  <div class="mt-4">
+                    <div class="headline-caps text-[11px] font-extrabold text-slate-700">DRAIN CLEANER STATUS</div>
+                    <div class="text-[11px] text-brand-600 font-semibold">Manage cleaners →</div>
+                  </div>
+                </div>
+
+                <!-- KPI 3: Pending SOS Queue -->
+                <div onclick="document.getElementById('adminSosQueueSection').scrollIntoView({behavior:'smooth'})" class="reveal-card interactive-card bg-white rounded-2xl p-4 border border-slate-200/80 shadow-soft flex flex-col justify-between cursor-pointer">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <div id="kpiActiveSos" class="text-2xl sm:text-3xl font-extrabold text-rose-600 font-display">3</div>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 text-rose-600 text-[11px] font-bold mt-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> Live Pins on Map
+                      </span>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                      <i class="fa-solid fa-bell"></i>
+                    </div>
+                  </div>
+                  <div class="mt-4">
+                    <div class="headline-caps text-[11px] font-extrabold text-slate-700">PENDING SOS MESSAGES</div>
+                    <div class="text-[11px] text-slate-400">Citizen distress queue</div>
+                  </div>
+                </div>
+
+                <!-- KPI 4: Emergency Vehicle Fleet -->
+                <div onclick="switchView('vehicles')" class="reveal-card interactive-card bg-white rounded-2xl p-4 border border-slate-200/80 shadow-soft flex flex-col justify-between cursor-pointer">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <div id="kpiOpenVehicles" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display">6 / 8</div>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[11px] font-bold mt-2">
+                        Ready to Deploy
+                      </span>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <i class="fa-solid fa-truck-medical"></i>
+                    </div>
+                  </div>
+                  <div class="mt-4">
+                    <div class="headline-caps text-[11px] font-extrabold text-slate-700">EMERGENCY FLEET</div>
+                    <div class="text-[11px] text-brand-600 font-semibold">Filter &amp; dispatch →</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Road Safety Percentage Breakdown Card (3 Cols - MCG Official Only) -->
+              <div class="reveal-card interactive-card lg:col-span-3 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-soft flex flex-col justify-between">
+                <div>
+                  <span class="hl-indigo headline-caps text-[10px]">MCG OFFICIAL METRIC</span>
+                  <h3 class="headline-caps text-sm font-extrabold text-slate-900 mt-1">ROAD SAFETY PERCENTAGE</h3>
+                  <p class="text-xs text-slate-400">Live passability across 159 Gurugram hotspots</p>
+                </div>
+
+                <div class="relative my-3 flex items-center justify-center">
+                  <svg viewBox="0 0 36 36" class="w-32 h-32 -rotate-90">
+                    <circle cx="18" cy="18" r="14" fill="none" stroke="#F1F5F9" stroke-width="4.5"></circle>
+                    <circle id="donutSafeArc" cx="18" cy="18" r="14" fill="none" stroke="#10B981" stroke-width="4.5" stroke-dasharray="62 100" stroke-linecap="round"></circle>
+                    <circle id="donutWatchArc" cx="18" cy="18" r="14" fill="none" stroke="#F59E0B" stroke-width="4.5" stroke-dasharray="22 100" stroke-dashoffset="-64" stroke-linecap="round"></circle>
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="donutCenterSafetyPct" class="text-2xl font-extrabold text-slate-900 font-display">62%</span>
+                    <span class="text-[10px] font-bold text-emerald-600 headline-caps">SAFE ROADS</span>
+                  </div>
+                </div>
+
+                <div class="space-y-1 text-xs border-t border-slate-100 pt-2.5">
+                  <div class="flex justify-between"><span class="text-slate-500">● Clear Wide Roads:</span><strong id="roadSafeBreakdown" class="text-emerald-600">98 Spots</strong></div>
+                  <div class="flex justify-between"><span class="text-slate-500">● Shallow Waterlogged:</span><strong id="roadWatchBreakdown" class="text-amber-600">35 Spots</strong></div>
+                  <div class="flex justify-between"><span class="text-slate-500">● Deep Flooded (Closed):</span><strong id="roadFloodBreakdown" class="text-rose-600">26 Spots</strong></div>
+                </div>
+              </div>
+
+              <!-- Quick Drain Cleaner Control Widget (4 Cols - MCG Official Only) -->
+              <div class="reveal-card interactive-card lg:col-span-4 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-soft flex flex-col justify-between space-y-3">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <span class="hl-amber headline-caps text-[10px]">MCG DESILTING CONTROL</span>
+                    <h3 class="headline-caps text-sm font-extrabold text-slate-900 mt-1">DRAIN CLEANER STATUS</h3>
+                    <p class="text-xs text-slate-400">Click any hotspot to toggle Drain Cleaned vs. Clogged</p>
+                  </div>
+                  <button onclick="switchView('drains')" class="headline-caps text-xs font-extrabold text-brand-600 hover:underline">
+                    ALL DRAINS →
+                  </button>
+                </div>
+
+                <div id="overviewDrainQuickList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Admin Row 2: Pending SOS Messages Queue (MCG Official Only) -->
+            <div id="adminSosQueueSection" class="reveal-card bg-white rounded-2xl p-5 border border-slate-200/80 shadow-soft space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                    <h3 class="headline-caps text-sm sm:text-base font-extrabold text-slate-900">PENDING SOS MESSAGES QUEUE (MCG OFFICIAL ONLY)</h3>
+                  </div>
+                  <p class="text-xs text-slate-500">Live distress alerts submitted by Gurugram citizens. Click <span class="hl-indigo">LOCATE ON MAP</span> or <span class="hl-mint">DISPATCH UNIT</span>.</p>
+                </div>
+                <button onclick="switchView('map')" class="headline-caps px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 text-xs font-extrabold">
+                  VIEW ALL SOS PINS ON MAP →
+                </button>
+              </div>
+
+              <div id="adminPendingSosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ============================================================= -->
+          <!-- PUBLIC ROAD FLOOD ALERTS & EMERGENCY SPEED DIAL (ALL USERS)   -->
+          <!-- ============================================================= -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+            <!-- Public Waterlogging & Road Status Table (7 Cols) -->
+            <div class="reveal-card interactive-card lg:col-span-7 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-soft space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="headline-caps text-sm sm:text-base font-extrabold text-slate-900">PUBLIC WATERLOGGING &amp; ROAD ALERTS</h3>
+                  <p class="text-xs text-slate-400">Click any Gurugram road to view safe bypass route on the map</p>
+                </div>
+                <button onclick="switchView('map')" class="headline-caps text-xs font-extrabold text-brand-600 hover:underline">
+                  ROUTE SEARCH →
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="border-b border-slate-100 text-[10px] font-extrabold text-slate-400 headline-caps">
+                      <th class="pb-2.5 pr-2">STATUS</th>
+                      <th class="pb-2.5 px-2">ROAD / JUNCTION</th>
+                      <th class="pb-2.5 px-2">RECOMMENDED SAFE BYPASS</th>
+                      <th class="pb-2.5 pl-2 text-right">WATER LEVEL</th>
+                    </tr>
+                  </thead>
+                  <tbody id="overviewRoadTableBody" class="divide-y divide-slate-100 text-xs">
+                    <!-- Populated dynamically via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Public Emergency Speed Dial & Personal SOS Submission Card (5 Cols) -->
+            <div class="reveal-card interactive-card lg:col-span-5 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-soft flex flex-col justify-between space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="headline-caps text-sm sm:text-base font-extrabold text-slate-900">EMERGENCY SPEED DIAL &amp; SOS</h2>
+                  <p class="text-xs text-slate-400">1-tap emergency helplines &amp; personal SOS reporting</p>
+                </div>
+                <button onclick="openModal('sosModal')" class="headline-caps px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[11px] shadow-2xs">
+                  + SUBMIT SOS
+                </button>
+              </div>
+
+              <!-- 2x2 Speed Dial Grid -->
+              <div class="grid grid-cols-2 gap-2.5">
+                <button onclick="triggerSpeedDialCall('National Emergency & Rescue', '112')" class="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200/80 flex items-center justify-between transition text-left">
+                  <div>
+                    <div class="headline-caps text-xs font-extrabold text-slate-900">RESCUE &amp; BOAT</div>
+                    <div class="text-[11px] text-slate-500">National Helpline</div>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-extrabold text-xs">112</span>
+                </button>
+
+                <button onclick="triggerSpeedDialCall('MCG Flood Control Room', '1800-180-1817')" class="p-3 rounded-xl bg-brand-50/70 hover:bg-brand-100/80 border border-brand-200/80 flex items-center justify-between transition text-left">
+                  <div>
+                    <div class="headline-caps text-xs font-extrabold text-slate-900">MCG CONTROL</div>
+                    <div class="text-[11px] text-slate-500">Waterlogging Help</div>
+                  </div>
+                  <span class="px-2 py-1 rounded-lg bg-brand-600 text-white font-extrabold text-[11px]">CALL</span>
+                </button>
+
+                <button onclick="triggerSpeedDialCall('DHBVN Power Outage Helpline', '1912')" class="p-3 rounded-xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 flex items-center justify-between transition text-left">
+                  <div>
+                    <div class="headline-caps text-xs font-extrabold text-slate-900">DHBVN POWER</div>
+                    <div class="text-[11px] text-slate-500">Outage &amp; Wires</div>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-extrabold text-xs">1912</span>
+                </button>
+
+                <button onclick="triggerSpeedDialCall('Gurugram Traffic Police', '1095')" class="p-3 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200/80 flex items-center justify-between transition text-left">
+                  <div>
+                    <div class="headline-caps text-xs font-extrabold text-slate-900">TRAFFIC POLICE</div>
+                    <div class="text-[11px] text-slate-500">Tow &amp; Route Help</div>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-extrabold text-xs">1095</span>
+                </button>
+              </div>
+
+              <!-- Personal SOS Status Box (Safe for Civilians — Never Exposes Other Users' Queue) -->
+              <div id="civilianPersonalSosReceipt" class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs space-y-1.5">
+                <div class="headline-caps text-[10px] font-extrabold text-slate-500 flex items-center justify-between">
+                  <span>NEED IMMEDIATE ASSISTANCE?</span>
+                  <span class="hl-mint">GPS READY</span>
+                </div>
+                <p class="text-slate-600 text-[11px] leading-relaxed">
+                  Click <strong>+ SUBMIT SOS</strong> above to share your exact Gurugram location with the MCG Flood Control Room.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- VIEW 2: LIVE MAP, INTERACTIVE ROUTE SEARCH & ADMIN FLEET OVERLAY-->
+        <!-- =============================================================== -->
+        <section id="view_map" class="hidden h-[calc(100vh-3.5rem)] w-full relative overflow-hidden flex flex-col">
+
+          <!-- TOP INTERACTIVE MAP ROUTE SEARCH BAR (ORIGIN, DESTINATION, LOCATION SEARCH & TRAVEL MODES) -->
+          <div class="bg-white border-b border-slate-200/90 px-4 py-2.5 z-20 shadow-xs space-y-2">
+            <div class="flex flex-wrap items-center gap-2">
+
+              <!-- Origin Selector -->
+              <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 flex-1 min-w-[170px]">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                <span class="headline-caps text-[10px] font-extrabold text-slate-400">FROM:</span>
+                <select id="routeOriginSelect" onchange="calculateCustomRoute(true)" class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none w-full">
+                  <option value="loc_cyberhub">DLF Cyber Hub</option>
+                  <option value="loc_iffco">IFFCO Chowk Metro</option>
+                  <option value="loc_huda">Huda City Centre</option>
+                  <option value="loc_sec29">Sector 29 Market</option>
+                  <option value="loc_golf">Golf Course Road (Sec 27)</option>
+                  <option value="loc_rajiv">Rajiv Chowk</option>
+                </select>
+              </div>
+
+              <!-- Swap Origin & Destination Button -->
+              <button
+                onclick="swapRouteEndpoints()"
+                class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-brand-50 text-slate-600 hover:text-brand-600 flex items-center justify-center transition shrink-0"
+                title="Swap Origin and Destination"
+              >
+                <i class="fa-solid fa-right-left text-xs"></i>
+              </button>
+
+              <!-- Destination Selector -->
+              <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 flex-1 min-w-[170px]">
+                <span class="w-2 h-2 rounded-full bg-brand-600 shrink-0"></span>
+                <span class="headline-caps text-[10px] font-extrabold text-slate-400">TO:</span>
+                <select id="routeDestSelect" onchange="calculateCustomRoute(true)" class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none w-full">
+                  <option value="loc_sohna" selected>Sohna Road (Subhash Chowk)</option>
+                  <option value="loc_medanta">Medanta Hospital (Sec 38)</option>
+                  <option value="loc_herohonda">Hero Honda Chowk</option>
+                  <option value="loc_cyberhub">DLF Cyber Hub</option>
+                  <option value="loc_huda">Huda City Centre</option>
+                  <option value="loc_golf">Golf Course Road (Sec 54)</option>
+                </select>
+              </div>
+
+              <!-- Find Safe Route Action Button -->
+              <button
+                onclick="calculateCustomRoute(true)"
+                class="headline-caps px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-2xs transition shrink-0"
+              >
+                <i class="fa-solid fa-diamond-turn-right"></i>
+                <span>FIND SAFE ROUTE</span>
+              </button>
+
+              <!-- Direct Map Location Search Input -->
+              <div class="relative min-w-[190px] flex-1 sm:flex-initial">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input
+                  id="mapPinSearchInput"
+                  type="text"
+                  oninput="handleGlobalSearch(this.value)"
+                  placeholder="Find road or underpass..."
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-brand-600"
+                />
+              </div>
+            </div>
+
+            <!-- Second Bar Row: Travel Mode Switcher + Admin Map Vehicle Category Toggles -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
+              <!-- Travel Mode Buttons -->
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="headline-caps text-[10px] font-extrabold text-slate-400 mr-1">MODE:</span>
+                <button onclick="changeTravelMode('FOUR_WHEELER')" id="travelBtn_FOUR_WHEELER" class="headline-caps px-2.5 py-1 rounded-lg bg-brand-600 text-white text-[10px] font-extrabold flex items-center gap-1 transition">
+                  <i class="fa-solid fa-car-side"></i> 4-WHEELER (WIDE ROADS)
+                </button>
+                <button onclick="changeTravelMode('TWO_WHEELER')" id="travelBtn_TWO_WHEELER" class="headline-caps px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold flex items-center gap-1 transition">
+                  <i class="fa-solid fa-motorcycle"></i> 2-WHEELER
+                </button>
+                <button onclick="changeTravelMode('ON_FOOT')" id="travelBtn_ON_FOOT" class="headline-caps px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold flex items-center gap-1 transition">
+                  <i class="fa-solid fa-person-walking"></i> ON FOOT
+                </button>
+
+                <label class="inline-flex items-center gap-1.5 ml-2 text-[11px] font-bold text-slate-600 cursor-pointer">
+                  <input id="wideRoadMapCheckbox" type="checkbox" checked onchange="toggleWideRoadsOverlay(this.checked)" class="rounded text-brand-600" />
+                  <span class="headline-caps text-[10px]">SHOW WIDE CAR ROADS</span>
+                </label>
+              </div>
+
+              <!-- MCG OFFICIAL ONLY: Map Vehicle Category Toggle Chips -->
+              <div class="admin-only-el flex flex-wrap items-center gap-1">
+                <span class="headline-caps text-[10px] font-extrabold text-slate-400 mr-1">MAP FLEET OVERLAY:</span>
+                <button onclick="toggleVehicleCategory('TANKER')" id="mapCatChip_TANKER" class="px-2 py-0.5 rounded-md bg-brand-600 text-white text-[10px] font-bold transition">
+                  ✓ Suction Tankers
+                </button>
+                <button onclick="toggleVehicleCategory('AMBULANCE')" id="mapCatChip_AMBULANCE" class="px-2 py-0.5 rounded-md bg-brand-600 text-white text-[10px] font-bold transition">
+                  ✓ Ambulances
+                </button>
+                <button onclick="toggleVehicleCategory('BOAT')" id="mapCatChip_BOAT" class="px-2 py-0.5 rounded-md bg-brand-600 text-white text-[10px] font-bold transition">
+                  ✓ Rescue Boats
+                </button>
+                <button onclick="toggleVehicleCategory('QRV')" id="mapCatChip_QRV" class="px-2 py-0.5 rounded-md bg-brand-600 text-white text-[10px] font-bold transition">
+                  ✓ Quick Response
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- MAP WORKSPACE CONTAINER -->
+          <div class="flex-1 relative w-full h-full overflow-hidden">
+            <!-- Real Interactive Google Map -->
+            <div id="gurugramMapCanvas" class="w-full h-full clean-light-map z-10"></div>
+
+            <!-- FLOATING LEFT NAVIGATION & HOTSPOT INSPECTOR CARD -->
+            <div class="absolute top-3 left-3 bottom-3 w-[calc(100%-1.5rem)] sm:w-[390px] z-20 flex flex-col gap-3 pointer-events-none overflow-y-auto pr-1">
+
+              <!-- Card 1: Safe Route Comparison & Active Steps -->
+              <div class="bg-white rounded-2xl p-4 shadow-float border border-slate-200/90 pointer-events-auto space-y-3">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="hl-mint headline-caps text-[10px]">LIVE ROUTE COMPARISON</span>
+                    <h3 id="routeHeaderSummary" class="headline-caps text-sm font-extrabold text-slate-900 mt-0.5">
+                      CYBER HUB → SOHNA ROAD
+                    </h3>
+                  </div>
+                  <button onclick="resetMapCenter()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-brand-50 text-slate-600 flex items-center justify-center" title="Recenter Map">
+                    <i class="fa-solid fa-crosshairs text-xs"></i>
+                  </button>
+                </div>
+
+                <!-- Green Safe Route vs Red Flooded Route -->
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div class="p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-200">
+                    <div class="headline-caps text-[10px] font-extrabold text-emerald-700">● GREEN SAFE ROUTE</div>
+                    <div id="safeRouteTimeLabel" class="text-sm font-extrabold text-slate-900 mt-0.5">26 mins (Dry)</div>
+                    <div id="safeRouteViaLabel" class="text-[11px] text-emerald-700 font-medium">Via Wide Golf Course Rd</div>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-rose-50/90 border border-rose-200">
+                    <div class="headline-caps text-[10px] font-extrabold text-rose-600">● RED FLOODED ROUTE</div>
+                    <div id="floodedRouteTimeLabel" class="text-sm font-extrabold text-slate-900 mt-0.5">2 hr 10 mins</div>
+                    <div class="text-[11px] text-rose-600 font-medium">Avoid NH-48 (115 cm)</div>
+                  </div>
+                </div>
+
+                <!-- Turn-by-Turn Navigation Timeline -->
+                <div id="floatingRouteTimeline" class="space-y-2.5 pt-1 relative before:content-[''] before:absolute before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+
+              <!-- Card 2: Selected Road Hotspot Inspector -->
+              <div class="bg-white rounded-2xl p-4 shadow-float border border-slate-200/90 pointer-events-auto space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <span id="floatBannerPill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/60 text-[11px] font-semibold">
+                    <i class="fa-solid fa-water"></i>
+                    <span>115 cm waterlogging</span>
+                  </span>
+                  <select onchange="selectHotspotById(this.value, true)" id="mapSpotSelector" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700 focus:outline-none">
+                  </select>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h2 id="floatSpotTitle" class="headline-caps text-base font-extrabold text-slate-900">RAJIV CHOWK UNDERPASS</h2>
+                    <p id="floatSpotCode" class="text-xs text-slate-500">Safe Bypass: <strong class="text-brand-600" id="floatBypassName">Golf Course Rd → SPR</strong></p>
+                  </div>
+                  <div class="text-right">
+                    <div id="floatWaterMetric" class="text-base font-extrabold text-rose-600">115 cm</div>
+                    <div id="floatRoadWidth" class="text-[10px] font-bold text-slate-400">Wide 6-Lane</div>
+                  </div>
+                </div>
+
+                <!-- Admin-Only Controls inside Map Card (Hidden for Civilians) -->
+                <div class="admin-only-el pt-2 border-t border-slate-100 space-y-2">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-500 font-medium">Drain Cleaner Status:</span>
+                    <button onclick="toggleSelectedSpotDrain()" id="floatDrainStatusBtn" class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-extrabold text-[11px]">
+                      Clogged — Click to Mark Cleaned
+                    </button>
+                  </div>
+                  <button onclick="dispatchVehicleToSelectedSpot()" class="headline-caps w-full py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-truck-fast"></i>
+                    <span>DISPATCH EMERGENCY VEHICLE HERE</span>
+                  </button>
+                </div>
+
+                <!-- Public SOS Action -->
+                <button onclick="openModal('sosModal')" class="headline-caps w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-extrabold text-xs transition">
+                  + SUBMIT SOS AT THIS LOCATION
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- VIEW 3: EMERGENCY VEHICLE FLEET & FILTERS (MCG OFFICIAL ONLY)   -->
+        <!-- =============================================================== -->
+        <section id="view_vehicles" class="hidden p-4 sm:p-6 lg:p-7 max-w-[1460px] mx-auto space-y-6">
+
+          <!-- Header + Status Filter Tabs (All / Ready to Deploy / Occupied) -->
+          <div class="reveal-card flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-soft">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="hl-indigo headline-caps text-[10px]">MCG OFFICIAL EXCLUSIVE</span>
+                <span class="hl-mint headline-caps text-[10px]">LIVE GPS TRANSPONDERS</span>
+              </div>
+              <h1 class="headline-caps text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
+                EMERGENCY VEHICLE FLEET MANAGEMENT
+              </h1>
+              <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Filter emergency units by deployment status or toggle vehicle categories on the list and live map.
+              </p>
+            </div>
+
+            <!-- Status Filter Tabs -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="setVehicleFilter('ALL')" id="vFilter_ALL" class="headline-caps px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-extrabold transition">
+                ALL VEHICLES (8)
+              </button>
+              <button onclick="setVehicleFilter('OPEN')" id="vFilter_OPEN" class="headline-caps px-4 py-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-emerald-700 text-xs font-extrabold transition">
+                ● READY TO DEPLOY
+              </button>
+              <button onclick="setVehicleFilter('OCCUPIED')" id="vFilter_OCCUPIED" class="headline-caps px-4 py-2 rounded-xl bg-slate-100 hover:bg-amber-50 text-amber-700 text-xs font-extrabold transition">
+                ● OCCUPIED
+              </button>
+            </div>
+          </div>
+
+          <!-- Vehicle Category Toggle Switches / Chips Bar -->
+          <div class="reveal-card bg-white p-4 rounded-2xl border border-slate-200/80 shadow-soft flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-brand-600"></i>
+              <span class="headline-caps text-xs font-extrabold text-slate-800">VEHICLE CATEGORY TOGGLES (SHOW / HIDE ON LIST &amp; MAP):</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                onclick="toggleVehicleCategory('TANKER')"
+                id="fleetCatChip_TANKER"
+                class="px-3.5 py-2 rounded-xl bg-brand-600 text-white text-xs font-extrabold flex items-center gap-2 transition shadow-2xs"
+              >
+                <i class="fa-solid fa-truck-droplet"></i>
+                <span>Water Suction Tankers</span>
+                <span class="px-1.5 py-0.2 rounded bg-white/20 text-[10px]">ON</span>
+              </button>
+
+              <button
+                onclick="toggleVehicleCategory('AMBULANCE')"
+                id="fleetCatChip_AMBULANCE"
+                class="px-3.5 py-2 rounded-xl bg-brand-600 text-white text-xs font-extrabold flex items-center gap-2 transition shadow-2xs"
+              >
+                <i class="fa-solid fa-truck-medical"></i>
+                <span>Ambulances</span>
+                <span class="px-1.5 py-0.2 rounded bg-white/20 text-[10px]">ON</span>
+              </button>
+
+              <button
+                onclick="toggleVehicleCategory('BOAT')"
+                id="fleetCatChip_BOAT"
+                class="px-3.5 py-2 rounded-xl bg-brand-600 text-white text-xs font-extrabold flex items-center gap-2 transition shadow-2xs"
+              >
+                <i class="fa-solid fa-ship"></i>
+                <span>Rescue Boats</span>
+                <span class="px-1.5 py-0.2 rounded bg-white/20 text-[10px]">ON</span>
+              </button>
+
+              <button
+                onclick="toggleVehicleCategory('QRV')"
+                id="fleetCatChip_QRV"
+                class="px-3.5 py-2 rounded-xl bg-brand-600 text-white text-xs font-extrabold flex items-center gap-2 transition shadow-2xs"
+              >
+                <i class="fa-solid fa-bolt"></i>
+                <span>Quick Response Vehicles</span>
+                <span class="px-1.5 py-0.2 rounded bg-white/20 text-[10px]">ON</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Vehicle Cards Grid -->
+          <div id="vehicleCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+        </section>
+
+        <!-- =============================================================== -->
+        <!-- VIEW 4: DRAIN CLEANER MANAGEMENT MODULE (MCG OFFICIAL ONLY)     -->
+        <!-- =============================================================== -->
+        <section id="view_drains" class="hidden p-4 sm:p-6 lg:p-7 max-w-[1460px] mx-auto space-y-6">
+          <div class="reveal-card bg-white p-5 rounded-3xl border border-slate-200/80 shadow-soft flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="hl-amber headline-caps text-[10px]">MCG OFFICIAL DESILTING TRACKER</span>
+              <h1 class="headline-caps text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
+                DRAIN CLEANER &amp; HOTSPOT DESILTING MODULE
+              </h1>
+              <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Assign drain cleaner teams and mark clogged stormwater drains as cleaned to reduce flood depth by 40%.
+              </p>
+            </div>
+            <div class="text-right">
+              <div id="drainViewProgressNum" class="text-2xl font-extrabold text-brand-600 font-display">16 / 36 Hotspots</div>
+              <div class="text-xs text-slate-400">Primary stormwater drains cleaned</div>
+            </div>
+          </div>
+
+          <div id="drainCleanerCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 3. MODALS (SUBMIT PERSONAL SOS & SUSTAINX INFO)                       -->
+  <!-- ===================================================================== -->
+
+  <!-- Submit SOS Request Modal -->
+  <div id="sosModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-float border border-slate-200 relative">
+      <button onclick="closeModal('sosModal')" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <h3 class="headline-caps text-lg font-extrabold text-slate-900">SUBMIT EMERGENCY SOS REQUEST</h3>
+          <p class="text-xs text-slate-500">Shares your live Gurugram GPS location with MCG Rescue Teams.</p>
+        </div>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div>
+          <label class="block headline-caps text-[10px] font-bold text-slate-500 mb-1">YOUR LOCATION IN GURUGRAM</label>
+          <select id="sosSpotSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800"></select>
+        </div>
+        <div>
+          <label class="block headline-caps text-[10px] font-bold text-slate-500 mb-1">EMERGENCY TYPE</label>
+          <select id="sosIssueSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800">
+            <option value="Vehicle Stuck in Deep Floodwater">🚗 Vehicle Stuck in Deep Floodwater</option>
+            <option value="Urgent Water Suction Tanker Needed">🚒 Urgent Water Suction Tanker Needed</option>
+            <option value="Medical / Ambulance Evacuation">🚑 Medical / Ambulance Evacuation</option>
+            <option value="Submerged Wire / DHBVN Power Hazard">⚡ Submerged Wire / DHBVN Power Hazard</option>
+          </select>
+        </div>
+        <div>
+          <label class="block headline-caps text-[10px] font-bold text-slate-500 mb-1">DETAILS / LANDMARK</label>
+          <input id="sosMessageInput" type="text" placeholder="e.g. Stuck near service lane exit, water knee-deep..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800" />
+        </div>
+        <button onclick="submitNewSosAlert()" class="headline-caps w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-sm">
+          SEND SOS REQUEST NOW
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-float text-xs font-semibold items-center gap-2.5">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMessage">Updated successfully</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 4. APPLICATION LOGIC: LOGIN GATE, RBAC, LIVE WEATHER, ROUTE SEARCH    -->
+  <!-- ===================================================================== -->
+  <script>
+    // =========================================================================
+    // A. GURUGRAM FLOOD HOTSPOTS, LANDMARKS & CATEGORIZED EMERGENCY FLEET
+    // =========================================================================
+    const floodSpots = [
+      {
+        id: 'hs_rajiv',
+        code: 'GRG-101',
+        name: 'Rajiv Chowk Underpass',
+        area: 'NH-48 → Sohna Road',
+        bypass: 'Golf Course Rd → SPR',
+        lat: 28.4449,
+        lng: 77.0345,
+        roadWidth: 'Wide 6-Lane',
+        drainCleaned: false,
+        cleanerTeam: 'Cleaner Unit #D-01',
+        stormDepthCm: 115,
+        pumpAssigned: false
+      },
+      {
+        id: 'hs_herohonda',
+        code: 'GRG-102',
+        name: 'Hero Honda Chowk',
+        area: 'NH-48 → Sector 34/37',
+        bypass: 'SPR Wide Highway',
+        lat: 28.4265,
+        lng: 77.0031,
+        roadWidth: 'Wide 6-Lane',
+        drainCleaned: false,
+        cleanerTeam: 'Cleaner Unit #D-02',
+        stormDepthCm: 135,
+        pumpAssigned: false
+      },
+      {
+        id: 'hs_medanta',
+        code: 'GRG-103',
+        name: 'Medanta Hospital Road',
+        area: 'Sector 38 → Subhash Chowk',
+        bypass: 'Huda City Centre Wide Rd',
+        lat: 28.4394,
+        lng: 77.0416,
+        roadWidth: '4-Lane Road',
+        drainCleaned: false,
+        cleanerTeam: 'Cleaner Unit #D-03',
+        stormDepthCm: 90,
+        pumpAssigned: false
+      },
+      {
+        id: 'hs_iffco',
+        code: 'GRG-104',
+        name: 'IFFCO Chowk Metro',
+        area: 'MG Road → Cyber Hub',
+        bypass: 'MG Road Elevated Corridor',
+        lat: 28.4773,
+        lng: 77.0689,
+        roadWidth: 'Wide 6-Lane',
+        drainCleaned: true,
+        cleanerTeam: 'Cleaner Unit #D-04',
+        stormDepthCm: 35,
+        pumpAssigned: true
+      },
+      {
+        id: 'hs_golfcourse',
+        code: 'GRG-105',
+        name: 'Golf Course Road (Sec 27)',
+        area: 'Cyber Hub → Sector 54',
+        bypass: 'Clear & Open for 4-Wheelers',
+        lat: 28.4575,
+        lng: 77.0968,
+        roadWidth: 'Wide 6-Lane',
+        drainCleaned: true,
+        cleanerTeam: 'Cleaner Unit #D-05',
+        stormDepthCm: 12,
+        pumpAssigned: true
+      },
+      {
+        id: 'hs_subhash',
+        code: 'GRG-106',
+        name: 'Subhash Chowk (Sohna Rd)',
+        area: 'Sohna Rd → Sector 48',
+        bypass: 'Golf Course Ext. Road',
+        lat: 28.4283,
+        lng: 77.0398,
+        roadWidth: 'Wide 6-Lane',
+        drainCleaned: false,
+        cleanerTeam: 'Cleaner Unit #D-06',
+        stormDepthCm: 85,
+        pumpAssigned: false
+      },
+      {
+        id: 'hs_sheetla',
+        code: 'GRG-107',
+        name: 'Sheetla Mata Road',
+        area: 'Sector 5 → Old Gurugram',
+        bypass: 'Palam Vihar Wide Link',
+        lat: 28.4754,
+        lng: 77.0315,
+        roadWidth: 'Narrow 2-Lane',
+        drainCleaned: false,
+        cleanerTeam: 'Cleaner Unit #D-07',
+        stormDepthCm: 80,
+        pumpAssigned: false
+      },
+      {
+        id: 'hs_narsinghpur',
+        code: 'GRG-108',
+        name: 'Narsinghpur Stretch (NH-48)',
+        area: 'NH-48 → Manesar Approach',
+        bypass: 'Dwarka Expressway Wide Rd',
+        lat: 28.4024,
+        lng: 76.9796,
+        roadWidth: 'Service Lane',
+        drainCleaned: false,
+        cleanerTeam: 'Cleaner Unit #D-08',
+        stormDepthCm: 145,
+        pumpAssigned: false
+      }
+    ];
+
+    // Landmarks for Map Route Search (Origin & Destination)
+    const gurugramLandmarks = {
+      loc_cyberhub: { name: 'DLF Cyber Hub', lat: 28.4946, lng: 77.0888 },
+      loc_iffco: { name: 'IFFCO Chowk Metro', lat: 28.4773, lng: 77.0689 },
+      loc_huda: { name: 'Huda City Centre', lat: 28.4593, lng: 77.0724 },
+      loc_sec29: { name: 'Sector 29 Market', lat: 28.4682, lng: 77.0635 },
+      loc_golf: { name: 'Golf Course Road (Sec 27)', lat: 28.4575, lng: 77.0968 },
+      loc_rajiv: { name: 'Rajiv Chowk', lat: 28.4449, lng: 77.0345 },
+      loc_sohna: { name: 'Sohna Road (Subhash Chowk)', lat: 28.4283, lng: 77.0398 },
+      loc_medanta: { name: 'Medanta Hospital (Sec 38)', lat: 28.4394, lng: 77.0416 },
+      loc_herohonda: { name: 'Hero Honda Chowk', lat: 28.4265, lng: 77.0031 }
+    };
+
+    // 8 Emergency Fleet Vehicles across 4 Categories: TANKER, AMBULANCE, BOAT, QRV
+    const rescueVehicles = [
+      {
+        id: 'TANKER-101',
+        name: 'Super Sucker Tanker #1',
+        category: 'TANKER',
+        categoryLabel: 'Water Suction Tanker',
+        icon: 'fa-truck-droplet',
+        driver: 'Rajesh Sharma',
+        route: 'Sector 33 → Rajiv Chowk',
+        lat: 28.4565,
+        lng: 77.0460,
+        status: 'OPEN'
+      },
+      {
+        id: 'TANKER-102',
+        name: 'High-Flow Suction Tanker #2',
+        category: 'TANKER',
+        categoryLabel: 'Water Suction Tanker',
+        icon: 'fa-truck-droplet',
+        driver: 'Ramesh Hooda',
+        route: 'Pumping at Hero Honda Chowk',
+        lat: 28.4275,
+        lng: 77.0045,
+        status: 'OCCUPIED'
+      },
+      {
+        id: 'AMB-201',
+        name: 'ALS Flood Ambulance #1',
+        category: 'AMBULANCE',
+        categoryLabel: 'Ambulance',
+        icon: 'fa-truck-medical',
+        driver: 'Dr. Karanvir & Team',
+        route: 'Medanta Emergency Standby',
+        lat: 28.4415,
+        lng: 77.0445,
+        status: 'OPEN'
+      },
+      {
+        id: 'AMB-202',
+        name: 'Critical Care Ambulance #2',
+        category: 'AMBULANCE',
+        categoryLabel: 'Ambulance',
+        icon: 'fa-truck-medical',
+        driver: 'Sunil Yadav',
+        route: 'Huda City Centre Metro',
+        lat: 28.4605,
+        lng: 77.0740,
+        status: 'OPEN'
+      },
+      {
+        id: 'BOAT-301',
+        name: 'SDRF Inflatable Boat #1',
+        category: 'BOAT',
+        categoryLabel: 'Rescue Boat',
+        icon: 'fa-ship',
+        driver: 'Capt. Mandeep Singh',
+        route: 'NH-48 Narsinghpur Stretch',
+        lat: 28.4050,
+        lng: 76.9820,
+        status: 'OPEN'
+      },
+      {
+        id: 'BOAT-302',
+        name: 'SDRF Zodiac Boat #2',
+        category: 'BOAT',
+        categoryLabel: 'Rescue Boat',
+        icon: 'fa-ship',
+        driver: 'Hawa Singh',
+        route: 'Rajiv Chowk Underpass',
+        lat: 28.4435,
+        lng: 77.0320,
+        status: 'OCCUPIED'
+      },
+      {
+        id: 'QRV-401',
+        name: 'MCG Quick Response 4x4 #1',
+        category: 'QRV',
+        categoryLabel: 'Quick Response Vehicle',
+        icon: 'fa-bolt',
+        driver: 'Suresh Khatri',
+        route: 'Sector 46 DHBVN Substation',
+        lat: 28.4360,
+        lng: 77.0580,
+        status: 'OPEN'
+      },
+      {
+        id: 'QRV-402',
+        name: 'Traffic & Tow QRV #2',
+        category: 'QRV',
+        categoryLabel: 'Quick Response Vehicle',
+        icon: 'fa-bolt',
+        driver: 'Naresh Tanwar',
+        route: 'Golf Course Road Patrol',
+        lat: 28.4620,
+        lng: 77.0940,
+        status: 'OPEN'
+      }
+    ];
+
+    let sosRequests = [
+      {
+        id: 'SOS-101',
+        person: 'Sanjay Mehta',
+        spotId: 'hs_rajiv',
+        location: 'Rajiv Chowk Underpass',
+        issue: 'Vehicle Stuck in Deep Floodwater',
+        note: 'Water rising near underpass ramp (115 cm), need suction tanker & tow.',
+        time: '2 mins ago',
+        lat: 28.4456,
+        lng: 77.0339,
+        assignedTruck: null
+      },
+      {
+        id: 'SOS-102',
+        person: 'Ritu Verma',
+        spotId: 'hs_medanta',
+        location: 'Medanta Hospital Road (Sec 38)',
+        issue: 'Medical / Ambulance Evacuation',
+        note: 'Patient vehicle blocked by waterlogging outside Gate 2.',
+        time: '5 mins ago',
+        lat: 28.4389,
+        lng: 77.0424,
+        assignedTruck: null
+      },
+      {
+        id: 'SOS-103',
+        person: 'Deepak Khandelwal',
+        spotId: 'hs_herohonda',
+        location: 'Hero Honda Chowk',
+        issue: 'Urgent Water Suction Tanker Needed',
+        note: 'Service lane completely submerged, traffic backed up.',
+        time: '9 mins ago',
+        lat: 28.4258,
+        lng: 77.0019,
+        assignedTruck: null
+      }
+    ];
+
+    const wideRoadCorridors = [
+      {
+        name: 'Golf Course Road (Wide 6-Lane — Safe for 4-Wheelers)',
+        coords: [[28.5020, 77.0860], [28.4795, 77.0930], [28.4575, 77.0968], [28.4310, 77.1015]]
+      },
+      {
+        name: 'Southern Peripheral Road / SPR (Wide 6-Lane — Safe for 4-Wheelers)',
+        coords: [[28.4310, 77.1015], [28.4140, 77.0950], [28.4120, 77.0720], [28.4085, 77.0420]]
+      }
+    ];
+
+    // =========================================================================
+    // B. AUTHENTICATION, RBAC & APP STATE (DEFAULT: NOT AUTHENTICATED)
+    // =========================================================================
+    let isAuthenticated = false;
+    let selectedGateRole = 'OFFICIAL';
+    let currentRole = 'OFFICIAL'; // 'OFFICIAL' | 'CITIZEN'
+    let currentUserName = 'Vikram Singh';
+
+    let currentView = 'overview';
+    let sidebarCollapsed = false;
+    let weatherScenario = 'storm'; // 'normal' (18mm) | 'ai' (65mm) | 'storm' (133mm)
+    let selectedSpotId = 'hs_rajiv';
+    let activeTravelMode = 'FOUR_WHEELER';
+    let showWideRoads = true;
+    let vehicleListFilter = 'ALL'; // 'ALL' | 'OPEN' | 'OCCUPIED'
+
+    // Category Visibility Map for Emergency Vehicles (MCG Official Only)
+    const activeVehicleCategories = {
+      TANKER: true,
+      AMBULANCE: true,
+      BOAT: true,
+      QRV: true
+    };
+
+    // Leaflet Map instances
+    let map = null;
+    let spotMarkers = [];
+    let sosMapMarkers = [];
+    let vehicleMapMarkers = [];
+    let safeRouteLine = null;
+    let floodedRouteLine = null;
+    let routeEndpointMarkers = [];
+    let wideRoadLayers = [];
+
+    // =========================================================================
+    // C. LOGIN GATE & STRICT ROLE-BASED ACCESS CONTROL (RBAC)
+    // =========================================================================
+    function selectGateRole(role) {
+      selectedGateRole = role;
+      const cCard = document.getElementById('gateCard_CITIZEN');
+      const oCard = document.getElementById('gateCard_OFFICIAL');
+      const cIcon = document.getElementById('gateIcon_CITIZEN');
+      const oIcon = document.getElementById('gateIcon_OFFICIAL');
+      const cDot = document.getElementById('gateDot_CITIZEN');
+      const oDot = document.getElementById('gateDot_OFFICIAL');
+      const nameInput = document.getElementById('gateUserNameInput');
+      const idInput = document.getElementById('gateUserIdInput');
+      const loginBtn = document.getElementById('gatePrimaryLoginBtn');
+      const glowPrimary = document.getElementById('loginGlowPrimary');
+
+      if (role === 'CITIZEN') {
+        cCard.className = 'role-card-option group relative p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/60 text-left flex flex-col items-center justify-center gap-2 focus:outline-none shadow-xs';
+        oCard.className = 'role-card-option group relative p-4 rounded-2xl border-2 border-slate-200/90 bg-slate-50/70 text-left flex flex-col items-center justify-center gap-2 focus:outline-none';
+        cIcon.className = 'w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-lg transition-all duration-300 group-hover:scale-110 shadow-sm';
+        oIcon.className = 'w-11 h-11 rounded-2xl bg-slate-200/80 text-slate-600 flex items-center justify-center text-lg transition-all duration-300 group-hover:scale-110';
+        cDot.className = 'w-4 h-1.5 rounded-full bg-emerald-600 transition-all';
+        oDot.className = 'w-1.5 h-1.5 rounded-full bg-transparent transition-all';
+
+        nameInput.value = 'Aarav Sharma';
+        idInput.value = '9811046021';
+        loginBtn.className = 'group headline-caps w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-xs shadow-lg shadow-emerald-600/25 transition-all duration-200 flex items-center justify-center gap-2.5';
+        if (glowPrimary) glowPrimary.className = 'absolute -top-24 -left-24 w-96 h-96 rounded-full bg-emerald-500/25 blur-3xl pointer-events-none transition-colors duration-500';
+      } else {
+        oCard.className = 'role-card-option group relative p-4 rounded-2xl border-2 border-brand-600 bg-brand-50/60 text-left flex flex-col items-center justify-center gap-2 focus:outline-none shadow-xs';
+        cCard.className = 'role-card-option group relative p-4 rounded-2xl border-2 border-slate-200/90 bg-slate-50/70 text-left flex flex-col items-center justify-center gap-2 focus:outline-none';
+        oIcon.className = 'w-11 h-11 rounded-2xl bg-brand-600 text-white flex items-center justify-center text-lg transition-all duration-300 group-hover:scale-110 shadow-sm';
+        cIcon.className = 'w-11 h-11 rounded-2xl bg-slate-200/80 text-slate-600 flex items-center justify-center text-lg transition-all duration-300 group-hover:scale-110';
+        oDot.className = 'w-4 h-1.5 rounded-full bg-brand-600 transition-all';
+        cDot.className = 'w-1.5 h-1.5 rounded-full bg-transparent transition-all';
+
+        nameInput.value = 'Vikram Singh';
+        idInput.value = 'MCG-GURUGRAM-2026';
+        loginBtn.className = 'group headline-caps w-full py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white font-extrabold text-xs shadow-lg shadow-brand-600/25 transition-all duration-200 flex items-center justify-center gap-2.5';
+        if (glowPrimary) glowPrimary.className = 'absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-600/25 blur-3xl pointer-events-none transition-colors duration-500';
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('gateUserIdInput');
+      const eyeIcon = document.getElementById('gateEyeIcon');
+      if (!passInput || !eyeIcon) return;
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        eyeIcon.className = 'fa-solid fa-eye-slash text-xs';
+      } else {
+        passInput.type = 'password';
+        eyeIcon.className = 'fa-solid fa-eye text-xs';
+      }
+    }
+
+    function loginToApplication() {
+      const enteredName = document.getElementById('gateUserNameInput').value.trim();
+      currentRole = selectedGateRole;
+      currentUserName = enteredName || (currentRole === 'OFFICIAL' ? 'Vikram Singh' : 'Aarav Sharma');
+      isAuthenticated = true;
+
+      document.getElementById('loginGateScreen').classList.add('hidden');
+      document.getElementById('authenticatedAppShell').classList.remove('hidden');
+
+      applyRoleAccessControl();
+      switchView('overview');
+      showToast(`Welcome, ${currentUserName}`);
+    }
+
+    function logoutToGate() {
+      isAuthenticated = false;
+      const tiltCard = document.getElementById('loginTiltCard');
+      if (tiltCard) tiltCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+      document.getElementById('authenticatedAppShell').classList.add('hidden');
+      document.getElementById('loginGateScreen').classList.remove('hidden');
+      showToast('Signed out');
+    }
+
+    function toggleRoleInstantly() {
+      currentRole = currentRole === 'OFFICIAL' ? 'CITIZEN' : 'OFFICIAL';
+      currentUserName = currentRole === 'OFFICIAL' ? 'Vikram Singh (MCG)' : 'Aarav Sharma';
+      applyRoleAccessControl();
+
+      // If civilian was on an admin-only tab, redirect cleanly to overview
+      if (currentRole === 'CITIZEN' && (currentView === 'vehicles' || currentView === 'drains')) {
+        switchView('overview');
+      } else {
+        refreshAllUI();
+      }
+      showToast(`Switched view to ${currentRole === 'OFFICIAL' ? 'MCG OFFICIAL (Full Command)' : 'LOCAL CIVILIAN (Public View)'}`);
+    }
+
+    function applyRoleAccessControl() {
+      const isOfficial = currentRole === 'OFFICIAL';
+
+      // Show or Strictly Hide all .admin-only-el elements
+      document.querySelectorAll('.admin-only-el').forEach(el => {
+        el.classList.toggle('hidden', !isOfficial);
+      });
+
+      // Update Top Header & Sidebar Role Labels
+      document.getElementById('headerRoleName').textContent = currentUserName;
+      document.getElementById('headerRoleSub').textContent = isOfficial ? 'MCG Official Account' : 'Local Civilian Account';
+      document.getElementById('headerRoleBadge').textContent = isOfficial ? 'OFFICIAL' : 'CIVILIAN';
+      document.getElementById('headerRoleBadge').className = isOfficial
+        ? 'px-2 py-0.5 rounded-md bg-brand-50 text-brand-600 text-[10px] font-extrabold headline-caps'
+        : 'px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-extrabold headline-caps';
+
+      document.getElementById('topBarRolePill').textContent = isOfficial ? 'MCG OFFICIAL PORTAL' : 'LOCAL CIVILIAN PORTAL';
+      document.getElementById('topBarRolePill').className = isOfficial
+        ? 'hl-indigo headline-caps text-[10px]'
+        : 'hl-mint headline-caps text-[10px]';
+
+      document.getElementById('topBarAccessSummary').textContent = isOfficial
+        ? 'Full Access: Road Safety %, Drain Cleaners, Pending SOS Queue & Emergency Fleet'
+        : 'Public View: Live Weather, Safe Route Search, Public Flood Alerts & Personal SOS';
+
+      document.getElementById('topBarSwitchRoleLabel').textContent = isOfficial
+        ? 'SWITCH TO CIVILIAN'
+        : 'SWITCH TO MCG OFFICIAL';
+
+      document.getElementById('navLabel_overview').textContent = isOfficial
+        ? '1. COMMAND & WEATHER'
+        : '1. WEATHER & ALERTS';
+
+      document.getElementById('dashboardModeTag').textContent = isOfficial ? 'MCG COMMAND CENTER' : 'PUBLIC SAFETY PORTAL';
+      document.getElementById('dashboardMainHeading').textContent = isOfficial
+        ? 'GURUGRAM FLOOD & RESCUE COMMAND'
+        : 'GURUGRAM LIVE WEATHER & FLOOD ALERTS';
+      document.getElementById('dashboardSubHeading').innerHTML = isOfficial
+        ? 'Live operational overview of <span class="hl-indigo">ROAD SAFETY %</span>, <span class="hl-amber">DRAIN CLEANERS (16/36)</span>, <span class="hl-rose">PENDING SOS ALERTS</span>, and <span class="hl-mint">EMERGENCY FLEET</span>.'
+        : 'Check <span class="hl-indigo">LIVE GURUGRAM WEATHER</span>, view <span class="hl-mint">PUBLIC ROAD ALERTS</span>, search safe routes, or submit a personal SOS.';
+
+      refreshAllUI();
+    }
+
+    // =========================================================================
+    // D. LIVE WEATHER MODULE (REPLACES RAIN PREDICTOR)
+    // =========================================================================
+    function getSpotCurrentDepth(spot) {
+      let factor = 1.0;
+      if (weatherScenario === 'normal') factor = 0.18;
+      if (weatherScenario === 'ai') factor = 0.52;
+      if (spot.drainCleaned) factor *= 0.60;
+      if (spot.pumpAssigned) factor *= 0.35;
+      return Math.max(0, Math.round(spot.stormDepthCm * factor));
+    }
+
+    function setWeatherScenario(mode) {
+      weatherScenario = mode;
+
+      // Update Sidebar Weather Buttons
+      const activeSidebarStyle = 'w-full px-3 py-2 rounded-xl text-left font-bold bg-white text-brand-600 shadow-2xs border border-brand-200/70 flex items-center justify-between transition';
+      const inactiveSidebarStyle = 'w-full px-3 py-2 rounded-xl text-left font-semibold text-slate-600 hover:bg-white flex items-center justify-between transition';
+      ['normal', 'ai', 'storm'].forEach(m => {
+        const b = document.getElementById('weatherMode_' + m);
+        if (b) b.className = m === mode ? activeSidebarStyle : inactiveSidebarStyle;
+      });
+
+      // Update Live Weather Chips
+      ['normal', 'ai', 'storm'].forEach(m => {
+        const chip = document.getElementById('wChip_' + m);
+        if (chip) {
+          chip.className = m === mode
+            ? 'headline-caps px-2.5 py-1.5 rounded-xl bg-brand-600 text-white text-[10px] font-extrabold transition'
+            : 'headline-caps px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-extrabold transition';
+        }
+      });
+
+      const weatherPresets = {
+        normal: {
+          temp: '29.2°C',
+          feels: '31.5°C',
+          rain: '18 mm/hr',
+          rainPct: '22%',
+          wind: '14 km/h',
+          humidity: '76%',
+          vis: '4.5 km',
+          badge: 'GREEN ADVISORY: LIGHT RAIN',
+          badgeClass: 'px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold headline-caps',
+          advisory: 'All wide arterial roads open. Normal traffic movement across Gurugram.'
+        },
+        ai: {
+          temp: '27.8°C',
+          feels: '30.2°C',
+          rain: '65 mm/hr',
+          rainPct: '58%',
+          wind: '26 km/h',
+          humidity: '88%',
+          vis: '2.6 km',
+          badge: 'AMBER WATCH: HEAVY DOWNPOUR',
+          badgeClass: 'px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-extrabold headline-caps',
+          advisory: 'Moderate waterlogging at low underpasses. Prefer Golf Course Road.'
+        },
+        storm: {
+          temp: '26.4°C',
+          feels: '29.1°C',
+          rain: '133 mm/hr',
+          rainPct: '95%',
+          wind: '38 km/h',
+          humidity: '94%',
+          vis: '1.8 km',
+          badge: 'RED ALERT: EXTREME CLOUDBURST',
+          badgeClass: 'px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-extrabold headline-caps animate-pulse',
+          advisory: 'Avoid NH-48 Underpasses (Rajiv & Hero Honda Chowk). Take Wide Golf Course Rd.'
+        }
+      };
+
+      const p = weatherPresets[mode];
+      document.getElementById('lwTempValue').textContent = p.temp;
+      document.getElementById('lwFeelsLike').innerHTML = `Feels like <span class="hl-indigo">${p.feels}</span>`;
+      document.getElementById('lwRainValue').textContent = p.rain;
+      document.getElementById('lwRainBar').style.width = p.rainPct;
+      document.getElementById('lwWindValue').textContent = p.wind;
+      document.getElementById('lwHumidityValue').textContent = p.humidity;
+      document.getElementById('lwVisibility').innerHTML = `Visibility: <span class="hl-mint">${p.vis}</span>`;
+      document.getElementById('liveWeatherAlertBadge').textContent = p.badge;
+      document.getElementById('liveWeatherAlertBadge').className = p.badgeClass;
+      document.getElementById('lwAdvisoryText').textContent = p.advisory;
+      document.getElementById('sidebarRainMmBadge').textContent = p.rain.toUpperCase();
+      document.getElementById('topBarWeatherQuick').textContent = `${p.temp} • ${p.rain} Rain`;
+
+      refreshAllUI();
+    }
+
+    async function syncRealOpenMeteoWeather() {
+      showToast('Syncing live Gurugram weather from Open-Meteo AWS...');
+      try {
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=28.4595&longitude=77.0266&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m');
+        const data = await res.json();
+        if (data && data.current) {
+          document.getElementById('lwTempValue').textContent = `${data.current.temperature_2m}°C`;
+          document.getElementById('lwFeelsLike').innerHTML = `Feels like <span class="hl-indigo">${data.current.apparent_temperature}°C</span>`;
+          document.getElementById('lwHumidityValue').textContent = `${data.current.relative_humidity_2m}%`;
+          document.getElementById('lwWindValue').textContent = `${data.current.wind_speed_10m} km/h`;
+          showToast('Live Gurugram temperature, wind & humidity synced!');
+        }
+      } catch (err) {
+        showToast('Using cached IMD Gurugram telemetry.');
+      }
+    }
+
+    // =========================================================================
+    // E. SIDEBAR COLLAPSE & VIEW SWITCHING (WITH RBAC PROTECTION)
+    // =========================================================================
+    function toggleSidebar() {
+      const sb = document.getElementById('leftSidebar');
+      const icon = document.getElementById('sidebarToggleIcon');
+      const collapsedSearch = document.getElementById('collapsedSearchBtn');
+
+      sidebarCollapsed = !sidebarCollapsed;
+      if (sidebarCollapsed) {
+        sb.classList.remove('w-[280px]');
+        sb.classList.add('w-[78px]', 'is-collapsed');
+        icon.className = 'fa-solid fa-angles-right text-xs';
+        if (collapsedSearch) {
+          collapsedSearch.classList.remove('hidden');
+          collapsedSearch.classList.add('flex');
+        }
+      } else {
+        sb.classList.remove('w-[78px]', 'is-collapsed');
+        sb.classList.add('w-[280px]');
+        icon.className = 'fa-solid fa-angles-left text-xs';
+        if (collapsedSearch) {
+          collapsedSearch.classList.add('hidden');
+          collapsedSearch.classList.remove('flex');
+        }
+      }
+
+      if (currentView === 'map' && map) {
+        setTimeout(() => map.invalidateSize(), 340);
+      }
+    }
+
+    function toggleMobileDrawer(open) {
+      const sb = document.getElementById('leftSidebar');
+      const backdrop = document.getElementById('mobileSidebarBackdrop');
+      if (open) {
+        sb.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sb.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function switchView(viewName) {
+      // Strict RBAC guard: Civilians cannot access 'vehicles' or 'drains'
+      if (currentRole === 'CITIZEN' && (viewName === 'vehicles' || viewName === 'drains')) {
+        showToast('Restricted: Only MCG Officials can access Fleet & Drain Management.');
+        return;
+      }
+
+      currentView = viewName;
+      toggleMobileDrawer(false);
+
+      const allViews = ['overview', 'map', 'vehicles', 'drains'];
+      allViews.forEach(v => {
+        const sec = document.getElementById('view_' + v);
+        if (sec) sec.classList.toggle('hidden', v !== viewName);
+
+        const sBtn = document.getElementById('sideBtn_' + v);
+        if (sBtn) {
+          const isAdminBtn = (v === 'vehicles' || v === 'drains');
+          const hideClass = (isAdminBtn && currentRole === 'CITIZEN') ? 'hidden ' : '';
+          sBtn.className = hideClass + (v === viewName
+            ? 'admin-nav-item sidebar-center-collapsed w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-brand-600 text-white font-bold text-xs transition group shadow-xs'
+            : 'admin-nav-item sidebar-center-collapsed w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-semibold text-xs transition group');
+        }
+      });
+
+      if (viewName === 'map') {
+        setTimeout(() => {
+          if (!map) {
+            initGurugramMap();
+          } else {
+            map.invalidateSize();
+            renderMapLayers();
+            calculateCustomRoute(false);
+          }
+        }, 120);
+      }
+
+      refreshAllUI();
+      triggerScrollReveal();
+    }
+
+    // =========================================================================
+    // F. RENDER DASHBOARD, DRAIN CLEANER MODULE, SOS QUEUE & FLEET FILTERS
+    // =========================================================================
+    function refreshAllUI() {
+      if (!isAuthenticated) return;
+
+      const openVehicles = rescueVehicles.filter(v => v.status === 'OPEN').length;
+      const cleanedSpots = floodSpots.filter(s => s.drainCleaned).length;
+      const totalCleanedDrains = 14 + cleanedSpots; // Base 14 + dynamic hotspots out of 36
+      const drainPct = Math.round((totalCleanedDrains / 36) * 100);
+
+      // Calculate Road Safety Percentage
+      const safeSpots = floodSpots.filter(s => getSpotCurrentDepth(s) < 25).length;
+      const watchSpots = floodSpots.filter(s => getSpotCurrentDepth(s) >= 25 && getSpotCurrentDepth(s) < 55).length;
+      const floodCount = floodSpots.filter(s => getSpotCurrentDepth(s) >= 55).length;
+      const roadSafetyPct = Math.round(((safeSpots + watchSpots * 0.5) / floodSpots.length) * 100);
+
+      // Update Sidebar Badges
+      document.getElementById('sideSosBadge').textContent = `${sosRequests.length} SOS`;
+      document.getElementById('sideVehicleBadge').textContent = `${openVehicles} READY`;
+      document.getElementById('sideDrainBadge').textContent = `${totalCleanedDrains}/36`;
+
+      // Update Admin KPIs if Official
+      if (currentRole === 'OFFICIAL') {
+        document.getElementById('kpiRoadSafetyPct').textContent = `${roadSafetyPct}%`;
+        document.getElementById('donutCenterSafetyPct').textContent = `${roadSafetyPct}%`;
+        document.getElementById('donutSafeArc').setAttribute('stroke-dasharray', `${roadSafetyPct} 100`);
+
+        document.getElementById('kpiDrainsRatio').textContent = `${totalCleanedDrains} / 36`;
+        document.getElementById('kpiDrainsPctBadge').textContent = `${drainPct}% Desilted`;
+        document.getElementById('drainViewProgressNum').textContent = `${totalCleanedDrains} / 36 Hotspots`;
+
+        document.getElementById('kpiActiveSos').textContent = sosRequests.length;
+        document.getElementById('kpiOpenVehicles').textContent = `${openVehicles} / ${rescueVehicles.length}`;
+
+        renderAdminDrainModules();
+        renderAdminSosQueue();
+        renderVehicleInventory();
+      }
+
+      renderOverviewTable();
+      updateFloatingMapCard();
+      if (map) renderMapLayers();
+    }
+
+    function renderOverviewTable() {
+      const tbody = document.getElementById('overviewRoadTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = floodSpots.map(spot => {
+        const depth = getSpotCurrentDepth(spot);
+        let statusPill = `<span class="hl-mint">CLEAR</span>`;
+        if (depth >= 55) statusPill = `<span class="hl-rose">FLOODED</span>`;
+        else if (depth >= 25) statusPill = `<span class="hl-amber">WATERLOGGED</span>`;
+
+        return `
+          <tr onclick="openSpotOnMap('${spot.id}')" class="hover:bg-slate-50 transition cursor-pointer">
+            <td class="py-2.5 pr-2 whitespace-nowrap">${statusPill}</td>
+            <td class="py-2.5 px-2 font-bold text-slate-900">${spot.name}</td>
+            <td class="py-2.5 px-2 text-brand-600 font-semibold">${spot.bypass}</td>
+            <td class="py-2.5 pl-2 text-right font-extrabold text-slate-800">${depth} cm</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAdminDrainModules() {
+      const quickList = document.getElementById('overviewDrainQuickList');
+      const fullGrid = document.getElementById('drainCleanerCardsGrid');
+
+      if (quickList) {
+        quickList.innerHTML = floodSpots.slice(0, 5).map(s => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+            <div>
+              <div class="font-bold text-slate-800">${s.name}</div>
+              <div class="text-[10px] text-slate-400">${s.cleanerTeam}</div>
+            </div>
+            <button
+              onclick="toggleDrainCleaned('${s.id}')"
+              class="px-2.5 py-1 rounded-lg font-extrabold text-[10px] headline-caps transition ${s.drainCleaned ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}"
+            >
+              ${s.drainCleaned ? '✓ CLEANED' : 'MARK CLEANED'}
+            </button>
+          </div>
+        `).join('');
+      }
+
+      if (fullGrid) {
+        fullGrid.innerHTML = floodSpots.map(s => {
+          const depth = getSpotCurrentDepth(s);
+          return `
+            <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-soft flex flex-col justify-between space-y-3">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-[10px] font-bold text-slate-400">${s.code} • ${s.cleanerTeam}</span>
+                  <h3 class="headline-caps text-sm font-extrabold text-slate-900 mt-0.5">${s.name}</h3>
+                </div>
+                <span class="${s.drainCleaned ? 'hl-mint' : 'hl-amber'} headline-caps text-[10px]">
+                  ${s.drainCleaned ? 'CLEANED' : 'CLOGGED'}
+                </span>
+              </div>
+
+              <div class="bg-slate-50 rounded-xl p-2.5 text-xs space-y-1">
+                <div class="flex justify-between"><span class="text-slate-400">Current Water:</span><strong class="text-slate-800">${depth} cm</strong></div>
+                <div class="flex justify-between"><span class="text-slate-400">Safe Bypass:</span><strong class="text-brand-600">${s.bypass}</strong></div>
+              </div>
+
+              <button
+                onclick="toggleDrainCleaned('${s.id}')"
+                class="headline-caps w-full py-2.5 rounded-xl font-extrabold text-xs transition ${s.drainCleaned ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-emerald-600 text-white hover:bg-emerald-700'}"
+              >
+                ${s.drainCleaned ? 'SET AS CLOGGED' : 'DISPATCH CLEANER & MARK CLEAN'}
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function toggleDrainCleaned(spotId) {
+      if (currentRole !== 'OFFICIAL') return;
+      const spot = floodSpots.find(s => s.id === spotId);
+      if (!spot) return;
+      spot.drainCleaned = !spot.drainCleaned;
+      refreshAllUI();
+      showToast(`${spot.name} drain marked as ${spot.drainCleaned ? 'CLEANED (Water level reduced)' : 'CLOGGED'}`);
+    }
+
+    function toggleSelectedSpotDrain() {
+      toggleDrainCleaned(selectedSpotId);
+    }
+
+    function renderAdminSosQueue() {
+      const grid = document.getElementById('adminPendingSosGrid');
+      if (!grid) return;
+
+      grid.innerHTML = sosRequests.map(sos => `
+        <div class="p-4 rounded-2xl bg-rose-50/60 border border-rose-200/80 flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-extrabold headline-caps sos-blink-pill">
+                ● LIVE SOS (${sos.id})
+              </span>
+              <span class="text-[11px] font-bold text-slate-400">${sos.time}</span>
+            </div>
+            <h4 class="headline-caps text-xs font-extrabold text-slate-900 mt-2">${sos.issue}</h4>
+            <div class="text-xs font-bold text-rose-700 mt-0.5">${sos.location}</div>
+            <p class="text-[11px] text-slate-600 mt-1">"${sos.note}"</p>
+          </div>
+
+          <div class="pt-2 border-t border-rose-200/60 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700">Caller: ${sos.person}</span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="openSpotOnMap('${sos.spotId}')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-[10px]">
+                Locate Pin
+              </button>
+              <button onclick="assignVehicleToSos('${sos.id}')" class="headline-caps px-2.5 py-1 rounded-lg bg-brand-600 text-white font-extrabold text-[10px]">
+                ${sos.assignedTruck ? `ASSIGNED: ${sos.assignedTruck}` : 'DISPATCH UNIT'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // G. EMERGENCY VEHICLE FLEET FILTERS & CATEGORY TOGGLES (MCG OFFICIAL ONLY)
+    // =========================================================================
+    function setVehicleFilter(filter) {
+      vehicleListFilter = filter;
+      ['ALL', 'OPEN', 'OCCUPIED'].forEach(f => {
+        const b = document.getElementById('vFilter_' + f);
+        if (b) {
+          b.className = f === filter
+            ? 'headline-caps px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-extrabold transition'
+            : 'headline-caps px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold transition';
+        }
+      });
+      renderVehicleInventory();
+      if (map) renderMapLayers();
+    }
+
+    function toggleVehicleCategory(cat) {
+      activeVehicleCategories[cat] = !activeVehicleCategories[cat];
+      const isOn = activeVehicleCategories[cat];
+
+      // Update Fleet View Category Chip
+      const fleetChip = document.getElementById('fleetCatChip_' + cat);
+      if (fleetChip) {
+        fleetChip.className = isOn
+          ? 'px-3.5 py-2 rounded-xl bg-brand-600 text-white text-xs font-extrabold flex items-center gap-2 transition shadow-2xs'
+          : 'px-3.5 py-2 rounded-xl bg-slate-100 text-slate-500 text-xs font-bold flex items-center gap-2 transition';
+      }
+
+      // Update Map Bar Category Chip
+      const mapChip = document.getElementById('mapCatChip_' + cat);
+      if (mapChip) {
+        mapChip.className = isOn
+          ? 'px-2 py-0.5 rounded-md bg-brand-600 text-white text-[10px] font-bold transition'
+          : 'px-2 py-0.5 rounded-md bg-slate-200 text-slate-500 text-[10px] font-semibold transition';
+      }
+
+      renderVehicleInventory();
+      if (map) renderMapLayers();
+    }
+
+    function renderVehicleInventory() {
+      const grid = document.getElementById('vehicleCardsGrid');
+      if (!grid) return;
+
+      const filtered = rescueVehicles.filter(v => {
+        const statusMatch = vehicleListFilter === 'ALL' || v.status === vehicleListFilter;
+        const catMatch = activeVehicleCategories[v.category];
+        return statusMatch && catMatch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full bg-white rounded-2xl p-8 text-center border border-slate-200">
+            <div class="headline-caps text-sm font-extrabold text-slate-700">NO VEHICLES MATCH CURRENT FILTERS</div>
+            <p class="text-xs text-slate-400 mt-1">Enable more vehicle category toggles or switch the status filter to "ALL VEHICLES".</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(v => {
+        const isOpen = v.status === 'OPEN';
+        return `
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-soft flex flex-col justify-between space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl ${isOpen ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'} flex items-center justify-center text-base">
+                  <i class="fa-solid ${v.icon}"></i>
+                </div>
+                <div>
+                  <span class="text-[10px] font-extrabold text-brand-600 headline-caps">${v.categoryLabel}</span>
+                  <h3 class="headline-caps text-xs font-extrabold text-slate-900">${v.name}</h3>
+                </div>
+              </div>
+              <span class="${isOpen ? 'hl-mint' : 'hl-amber'} headline-caps text-[9px]">
+                ${isOpen ? 'READY TO DEPLOY' : 'OCCUPIED'}
+              </span>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-2.5 space-y-1 text-xs border border-slate-100">
+              <div class="flex justify-between"><span class="text-slate-400">Unit ID:</span><strong class="text-slate-800">${v.id}</strong></div>
+              <div class="flex justify-between"><span class="text-slate-400">Operator:</span><strong class="text-slate-800">${v.driver}</strong></div>
+              <div class="flex justify-between"><span class="text-slate-400">Location:</span><strong class="text-slate-700 truncate ml-2">${v.route}</strong></div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <button
+                onclick="toggleVehicleAvailability('${v.id}')"
+                class="headline-caps flex-1 py-2 px-2.5 rounded-xl font-extrabold text-[10px] transition ${isOpen ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}"
+              >
+                MARK AS "${isOpen ? 'OCCUPIED' : 'READY TO DEPLOY'}"
+              </button>
+              <button
+                onclick="openVehicleOnMap('${v.id}')"
+                class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs"
+                title="Locate on Map"
+              >
+                <i class="fa-solid fa-location-dot"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleVehicleAvailability(vehicleId) {
+      if (currentRole !== 'OFFICIAL') return;
+      const v = rescueVehicles.find(item => item.id === vehicleId);
+      if (!v) return;
+      v.status = v.status === 'OPEN' ? 'OCCUPIED' : 'OPEN';
+      refreshAllUI();
+      showToast(`${v.id} marked as ${v.status === 'OPEN' ? 'READY TO DEPLOY' : 'OCCUPIED'}`);
+    }
+
+    // =========================================================================
+    // H. INTERACTIVE MAP, ROUTE SEARCH BAR & RBAC MAP OVERLAYS
+    // =========================================================================
+    function initGurugramMap() {
+      map = L.map('gurugramMapCanvas', {
+        center: [28.4520, 77.0520],
+        zoom: 12,
+        zoomControl: false
+      });
+
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '&copy; Google Maps • JalRakshak NCR'
+      }).addTo(map);
+
+      renderMapLayers();
+      calculateCustomRoute(false);
+    }
+
+    function renderMapLayers() {
+      if (!map) return;
+
+      spotMarkers.forEach(m => map.removeLayer(m));
+      spotMarkers = [];
+      sosMapMarkers.forEach(m => map.removeLayer(m));
+      sosMapMarkers = [];
+      vehicleMapMarkers.forEach(m => map.removeLayer(m));
+      vehicleMapMarkers = [];
+      wideRoadLayers.forEach(l => map.removeLayer(l));
+      wideRoadLayers = [];
+
+      // 1. Wide Road Corridors Overlay
+      if (showWideRoads) {
+        wideRoadCorridors.forEach(c => {
+          const line = L.polyline(c.coords, {
+            color: '#10B981',
+            weight: 8,
+            opacity: 0.28
+          }).addTo(map).bindPopup(`<div class="text-xs font-bold text-emerald-700">✅ ${c.name}</div>`);
+          wideRoadLayers.push(line);
+        });
+      }
+
+      // 2. Public Flood Hotspot Pins (Visible to both roles)
+      floodSpots.forEach(spot => {
+        const depth = getSpotCurrentDepth(spot);
+        const isSelected = spot.id === selectedSpotId;
+        let bg = '#10B981';
+        if (depth >= 55) bg = '#EF4444';
+        else if (depth >= 25) bg = '#F59E0B';
+
+        const html = `
+          <div class="flex flex-col items-center cursor-pointer">
+            <div class="px-2.5 py-1 rounded-full text-white text-[11px] font-extrabold shadow-md border-2 border-white flex items-center gap-1 ${isSelected ? 'scale-110 ring-4 ring-brand-500/30' : ''}" style="background:${bg}">
+              <span>${depth} cm</span>
+            </div>
+            <span class="mt-0.5 px-2 py-0.5 rounded-md bg-white/95 text-slate-800 text-[10px] font-bold shadow-xs border border-slate-200 whitespace-nowrap">
+              ${spot.name.split(' ')[0]} ${spot.name.split(' ')[1] || ''}
+            </span>
+          </div>
+        `;
+        const icon = L.divIcon({ html, className: '', iconSize: [100, 44], iconAnchor: [50, 22] });
+        const marker = L.marker([spot.lat, spot.lng], { icon }).addTo(map);
+        marker.on('click', () => selectHotspotById(spot.id, true));
+        spotMarkers.push(marker);
+      });
+
+      // 3. STRICT RBAC: SOS Map Pins & Emergency Fleet Markers ONLY Rendered for MCG OFFICIAL
+      if (currentRole === 'OFFICIAL') {
+        sosRequests.forEach(sos => {
+          const html = `
+            <div class="relative flex items-center justify-center">
+              <span class="absolute w-11 h-11 rounded-full bg-rose-500 sos-ring-anim"></span>
+              <div class="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold shadow-lg border-2 border-white flex items-center gap-1 whitespace-nowrap">
+                <i class="fa-solid fa-bell"></i>
+                <span>${sos.id}: ${sos.person.split(' ')[0]}</span>
+              </div>
+            </div>
+          `;
+          const icon = L.divIcon({ html, className: '', iconSize: [110, 32], iconAnchor: [55, 16] });
+          const m = L.marker([sos.lat, sos.lng], { icon }).addTo(map);
+          m.bindPopup(`
+            <div class="text-xs space-y-1">
+              <div class="font-extrabold text-rose-600 headline-caps">🚨 CITIZEN SOS (${sos.id})</div>
+              <div class="font-bold text-slate-900">${sos.issue}</div>
+              <div class="text-slate-500">${sos.note}</div>
+            </div>
+          `);
+          sosMapMarkers.push(m);
+        });
+
+        // Filtered Emergency Vehicles on Map
+        rescueVehicles.forEach(v => {
+          const statusMatch = vehicleListFilter === 'ALL' || v.status === vehicleListFilter;
+          if (!statusMatch || !activeVehicleCategories[v.category]) return;
+
+          const isOpen = v.status === 'OPEN';
+          const html = `
+            <div class="px-2.5 py-1 rounded-xl bg-white text-slate-800 text-[10px] font-extrabold shadow-md border-2 ${isOpen ? 'border-emerald-500' : 'border-amber-500'} flex items-center gap-1.5 whitespace-nowrap">
+              <span class="w-2 h-2 rounded-full ${isOpen ? 'bg-emerald-500' : 'bg-amber-500'}"></span>
+              <i class="fa-solid ${v.icon} text-brand-600"></i>
+              <span>${v.id}</span>
+            </div>
+          `;
+          const icon = L.divIcon({ html, className: '', iconSize: [96, 28], iconAnchor: [48, 14] });
+          const vm = L.marker([v.lat, v.lng], { icon }).addTo(map);
+          vm.bindPopup(`
+            <div class="text-xs space-y-1">
+              <div class="font-bold text-slate-900">${v.name}</div>
+              <div class="text-slate-500">${v.categoryLabel} • ${v.driver}</div>
+              <div class="font-bold ${isOpen ? 'text-emerald-600' : 'text-amber-600'}">
+                Status: ${isOpen ? 'READY TO DEPLOY' : 'OCCUPIED'}
+              </div>
+            </div>
+          `);
+          vehicleMapMarkers.push(vm);
+        });
+      }
+    }
+
+    function swapRouteEndpoints() {
+      const orig = document.getElementById('routeOriginSelect');
+      const dest = document.getElementById('routeDestSelect');
+      const temp = orig.value;
+      orig.value = dest.value;
+      dest.value = temp;
+      calculateCustomRoute(true);
+    }
+
+    function calculateCustomRoute(fitBounds = true) {
+      if (!map) return;
+      if (safeRouteLine) map.removeLayer(safeRouteLine);
+      if (floodedRouteLine) map.removeLayer(floodedRouteLine);
+      routeEndpointMarkers.forEach(m => map.removeLayer(m));
+      routeEndpointMarkers = [];
+
+      const origKey = document.getElementById('routeOriginSelect').value;
+      const destKey = document.getElementById('routeDestSelect').value;
+      const origin = gurugramLandmarks[origKey] || gurugramLandmarks.loc_cyberhub;
+      const dest = gurugramLandmarks[destKey] || gurugramLandmarks.loc_sohna;
+
+      // Safe Dry Waypoints via Wide Golf Course Road & SPR
+      const safeWaypoints = [
+        [origin.lat, origin.lng],
+        [28.4685, 77.0890],
+        [28.4450, 77.0940],
+        [dest.lat, dest.lng]
+      ];
+
+      // Flooded Waypoints via Rajiv Chowk NH-48 (Dashed Red Line to Avoid)
+      const floodedWaypoints = [
+        [origin.lat, origin.lng],
+        [28.4449, 77.0345],
+        [dest.lat, dest.lng]
+      ];
+
+      floodedRouteLine = L.polyline(floodedWaypoints, {
+        color: '#EF4444',
+        weight: 4,
+        dashArray: '8 8',
+        opacity: 0.75
+      }).addTo(map);
+
+      safeRouteLine = L.polyline(safeWaypoints, {
+        color: '#10B981',
+        weight: 6,
+        opacity: 0.95
+      }).addTo(map);
+
+      // Update Route Comparison Card
+      document.getElementById('routeHeaderSummary').textContent = `${origin.name.toUpperCase()} → ${dest.name.toUpperCase()}`;
+      const modeEta = activeTravelMode === 'FOUR_WHEELER' ? '26 mins (Wide Road)' : (activeTravelMode === 'TWO_WHEELER' ? '21 mins (Elevated)' : '38 mins (Footbridge)');
+      document.getElementById('safeRouteTimeLabel').textContent = modeEta;
+
+      const steps = [
+        { time: 'START', title: `ORIGIN: ${origin.name.toUpperCase()}`, sub: 'Verified dry entry point' },
+        { time: 'SAFE CORRIDOR', title: activeTravelMode === 'FOUR_WHEELER' ? 'WIDE 6-LANE GOLF COURSE RD / SPR' : 'ELEVATED DRY SECTOR CORRIDOR', sub: 'Bypasses 115 cm water at Rajiv Chowk' },
+        { time: 'ARRIVE', title: `DESTINATION: ${dest.name.toUpperCase()}`, sub: `Estimated Travel: ${modeEta}` }
+      ];
+
+      const timelineEl = document.getElementById('floatingRouteTimeline');
+      if (timelineEl) {
+        timelineEl.innerHTML = steps.map((st, idx) => `
+          <div class="relative pl-7">
+            <span class="w-5 h-5 rounded-full ${idx === 1 ? 'bg-emerald-500 text-white' : 'bg-brand-50 text-brand-600 border border-brand-200'} flex items-center justify-center text-[9px] absolute left-0.5 top-0.5">
+              <i class="fa-solid ${idx === 1 ? 'fa-shield-halved' : 'fa-location-dot'}"></i>
+            </span>
+            <div class="text-[10px] font-extrabold text-emerald-700 headline-caps">${st.time}</div>
+            <div class="text-xs font-extrabold text-slate-900 headline-caps">${st.title}</div>
+            <div class="text-[11px] text-slate-500">${st.sub}</div>
+          </div>
+        `).join('');
+      }
+
+      if (fitBounds) {
+        map.fitBounds(safeRouteLine.getBounds(), { padding: [60, 60] });
+      }
+    }
+
+    function changeTravelMode(mode) {
+      activeTravelMode = mode;
+      ['FOUR_WHEELER', 'TWO_WHEELER', 'ON_FOOT'].forEach(m => {
+        const btn = document.getElementById('travelBtn_' + m);
+        if (btn) {
+          btn.className = m === mode
+            ? 'headline-caps px-2.5 py-1 rounded-lg bg-brand-600 text-white text-[10px] font-extrabold flex items-center gap-1 transition'
+            : 'headline-caps px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-bold flex items-center gap-1 transition';
+        }
+      });
+      calculateCustomRoute(false);
+    }
+
+    function updateFloatingMapCard() {
+      const spot = floodSpots.find(s => s.id === selectedSpotId) || floodSpots[0];
+      const depth = getSpotCurrentDepth(spot);
+
+      const selector = document.getElementById('mapSpotSelector');
+      if (selector && selector.options.length === 0) {
+        selector.innerHTML = floodSpots.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      }
+      if (selector) selector.value = spot.id;
+
+      document.getElementById('floatSpotTitle').textContent = spot.name.toUpperCase();
+      document.getElementById('floatBypassName').textContent = spot.bypass;
+      document.getElementById('floatWaterMetric').textContent = `${depth} cm`;
+      document.getElementById('floatRoadWidth').textContent = spot.roadWidth;
+
+      const drainBtn = document.getElementById('floatDrainStatusBtn');
+      if (drainBtn) {
+        drainBtn.textContent = spot.drainCleaned ? '✓ Drain Cleaned (Click to Toggle)' : 'Clogged — Click to Mark Cleaned';
+        drainBtn.className = spot.drainCleaned
+          ? 'px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-extrabold text-[11px]'
+          : 'px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-extrabold text-[11px]';
+      }
+    }
+
+    function selectHotspotById(spotId, pan = true) {
+      selectedSpotId = spotId;
+      const spot = floodSpots.find(s => s.id === spotId) || floodSpots[0];
+      updateFloatingMapCard();
+      renderMapLayers();
+      if (pan && map) {
+        map.flyTo([spot.lat, spot.lng], 14, { duration: 0.6 });
+      }
+    }
+
+    function openSpotOnMap(spotId) {
+      selectedSpotId = spotId;
+      switchView('map');
+      setTimeout(() => selectHotspotById(spotId, true), 180);
+    }
+
+    function openVehicleOnMap(vehicleId) {
+      const v = rescueVehicles.find(item => item.id === vehicleId);
+      switchView('map');
+      if (v) {
+        setTimeout(() => {
+          if (map) map.flyTo([v.lat, v.lng], 14, { duration: 0.6 });
+        }, 180);
+      }
+    }
+
+    function toggleWideRoadsOverlay(enabled) {
+      showWideRoads = enabled;
+      renderMapLayers();
+    }
+
+    function resetMapCenter() {
+      if (map) map.flyTo([28.4520, 77.0520], 12, { duration: 0.6 });
+    }
+
+    // =========================================================================
+    // I. SOS SUBMISSION, FLEET DISPATCH & GLOBAL SEARCH
+    // =========================================================================
+    function submitNewSosAlert() {
+      const spotId = document.getElementById('sosSpotSelect').value;
+      const issue = document.getElementById('sosIssueSelect').value;
+      const note = document.getElementById('sosMessageInput').value.trim() || 'Requesting immediate assistance at this location.';
+      const spot = floodSpots.find(s => s.id === spotId) || floodSpots[0];
+      const newId = 'SOS-' + Math.floor(104 + Math.random() * 90);
+
+      sosRequests.unshift({
+        id: newId,
+        person: currentUserName,
+        spotId: spot.id,
+        location: spot.name,
+        issue,
+        note,
+        time: 'Just now',
+        lat: +(spot.lat + (Math.random() - 0.5) * 0.002).toFixed(4),
+        lng: +(spot.lng + (Math.random() - 0.5) * 0.002).toFixed(4),
+        assignedTruck: null
+      });
+
+      // Update Civilian Personal Receipt without exposing other users' SOS queue
+      const receipt = document.getElementById('civilianPersonalSosReceipt');
+      if (receipt) {
+        receipt.innerHTML = `
+          <div class="headline-caps text-[10px] font-extrabold text-emerald-700 flex items-center justify-between">
+            <span>✓ YOUR SOS (${newId}) IS ACTIVE</span>
+            <span class="hl-mint">SENT TO MCG</span>
+          </div>
+          <p class="text-slate-700 text-[11px] font-semibold mt-1">
+            Location: ${spot.name} • Issue: ${issue}
+          </p>
+        `;
+      }
+
+      document.getElementById('sosMessageInput').value = '';
+      closeModal('sosModal');
+      refreshAllUI();
+      showToast(`SOS Request (${newId}) transmitted to MCG Control Room!`);
+    }
+
+    function assignVehicleToSos(sosId) {
+      if (currentRole !== 'OFFICIAL') return;
+      const sos = sosRequests.find(s => s.id === sosId);
+      const openTruck = rescueVehicles.find(v => v.status === 'OPEN');
+      if (!openTruck) {
+        showToast('All emergency vehicles are currently Occupied.');
+        return;
+      }
+      openTruck.status = 'OCCUPIED';
+      openTruck.route = `Responding to ${sos.location}`;
+      sos.assignedTruck = openTruck.id;
+      refreshAllUI();
+      showToast(`Dispatched ${openTruck.name} (${openTruck.id}) to ${sos.location}`);
+    }
+
+    function dispatchVehicleToSelectedSpot() {
+      if (currentRole !== 'OFFICIAL') return;
+      const spot = floodSpots.find(s => s.id === selectedSpotId) || floodSpots[0];
+      const openTruck = rescueVehicles.find(v => v.status === 'OPEN');
+      if (!openTruck) {
+        showToast('All emergency vehicles are Occupied right now.');
+        return;
+      }
+      openTruck.status = 'OCCUPIED';
+      openTruck.route = `Pumping at ${spot.name}`;
+      openTruck.lat = spot.lat;
+      openTruck.lng = spot.lng;
+      spot.pumpAssigned = true;
+      refreshAllUI();
+      showToast(`${openTruck.id} dispatched to ${spot.name} — Water level dropping!`);
+    }
+
+    function triggerSpeedDialCall(title, number) {
+      showToast(`Dialling ${title} (${number}) & transmitting your GPS location...`);
+    }
+
+    function handleGlobalSearch(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) return;
+      const matchedSpot = floodSpots.find(s => s.name.toLowerCase().includes(q) || s.area.toLowerCase().includes(q));
+      if (matchedSpot) {
+        selectedSpotId = matchedSpot.id;
+        updateFloatingMapCard();
+        if (currentView !== 'map') switchView('map');
+        setTimeout(() => {
+          if (map) map.flyTo([matchedSpot.lat, matchedSpot.lng], 14, { duration: 0.5 });
+        }, 200);
+      }
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 3200);
+    }
+
+    // =========================================================================
+    // J. CUSTOM INTERACTIVE CURSOR & STAGGERED SCROLL REVEAL ANIMATIONS
+    // =========================================================================
+    function initCustomCursor() {
+      const dot = document.getElementById('customCursorDot');
+      const ring = document.getElementById('customCursorRing');
+      if (!dot || !ring) return;
+
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+      let ringX = mouseX;
+      let ringY = mouseY;
+
+      window.addEventListener('mousemove', e => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        dot.style.left = `${mouseX}px`;
+        dot.style.top = `${mouseY}px`;
+
+        const target = e.target.closest('button, a, select, input, tr, [onclick], .interactive-card');
+        document.body.classList.toggle('cursor-active', Boolean(target));
+      });
+
+      function animateRing() {
+        ringX += (mouseX - ringX) * 0.22;
+        ringY += (mouseY - ringY) * 0.22;
+        ring.style.left = `${ringX}px`;
+        ring.style.top = `${ringY}px`;
+        requestAnimationFrame(animateRing);
+      }
+      requestAnimationFrame(animateRing);
+    }
+
+    function triggerScrollReveal() {
+      const cards = document.querySelectorAll('.reveal-card');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, idx) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              entry.target.classList.add('is-visible');
+            }, idx * 45);
+          }
+        });
+      }, { threshold: 0.06 });
+
+      cards.forEach(card => observer.observe(card));
+    }
+
+    // =========================================================================
+    // K. INITIALIZE LOGIN GATE & LIVE GPS SIMULATION ON LOAD
+    // =========================================================================
+    function initLoginInteractiveExperience() {
+      const gateScreen = document.getElementById('loginGateScreen');
+      const tiltCard = document.getElementById('loginTiltCard');
+      const canvas = document.getElementById('loginRippleCanvas');
+
+      // 1. Smooth 3D Parallax Card Tilt
+      if (gateScreen && tiltCard) {
+        gateScreen.addEventListener('mousemove', (e) => {
+          if ( isAuthenticated ) return;
+          const rect = tiltCard.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          const deltaX = (e.clientX - centerX) / 28;
+          const deltaY = (centerY - e.clientY) / 28;
+          const clampX = Math.max(-6, Math.min(6, deltaY));
+          const clampY = Math.max(-6, Math.min(6, deltaX));
+          tiltCard.style.transform = `perspective(1000px) rotateX(${clampX}deg) rotateY(${clampY}deg)`;
+        });
+
+        gateScreen.addEventListener('mouseleave', () => {
+          tiltCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+        });
+      }
+
+      // 2. Interactive Radar Particle & Ripple Grid on Login Canvas
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+      let pointer = { x: width / 2, y: height / 2 };
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        pointer.x = e.clientX;
+        pointer.y = e.clientY;
+      });
+
+      const dots = [];
+      const spacing = 48;
+      for (let x = spacing / 2; x < width; x += spacing) {
+        for (let y = spacing / 2; y < height; y += spacing) {
+          dots.push({ baseX: x, baseY: y });
+        }
+      }
+
+      function renderLoginCanvas() {
+        if (!isAuthenticated) {
+          ctx.clearRect(0, 0, width, height);
+          const isCitizen = selectedGateRole === 'CITIZEN';
+          const activeRgb = isCitizen ? '16, 185, 129' : '91, 106, 208';
+
+          for (let i = 0; i < dots.length; i++) {
+            const d = dots[i];
+            const dx = pointer.x - d.baseX;
+            const dy = pointer.y - d.baseY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = 170;
+
+            let radius = 1.3;
+            let alpha = 0.16;
+            if (dist < maxDist) {
+              const factor = 1 - dist / maxDist;
+              radius = 1.3 + factor * 2.6;
+              alpha = 0.16 + factor * 0.55;
+            }
+
+            ctx.beginPath();
+            ctx.arc(d.baseX, d.baseY, radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${activeRgb}, ${alpha})`;
+            ctx.fill();
+          }
+        }
+        requestAnimationFrame(renderLoginCanvas);
+      }
+      requestAnimationFrame(renderLoginCanvas);
+    }
+
+    window.onload = function () {
+      const sosSelect = document.getElementById('sosSpotSelect');
+      if (sosSelect) {
+        sosSelect.innerHTML = floodSpots.map(s => `<option value="${s.id}">${s.name} (${s.area})</option>`).join('');
+      }
+
+      selectGateRole('OFFICIAL');
+      initCustomCursor();
+      initLoginInteractiveExperience();
+
+      // Live GPS movement simulation for Emergency Fleet (visible to MCG Officials)
+      setInterval(() => {
+        if (!isAuthenticated) return;
+        rescueVehicles.forEach(v => {
+          v.lat = +(v.lat + (Math.random() - 0.5) * 0.0005).toFixed(4);
+          v.lng = +(v.lng + (Math.random() - 0.5) * 0.0005).toFixed(4);
+        });
+        if (currentRole === 'OFFICIAL' && currentView === 'map' && map) renderMapLayers();
+      }, 3000);
+    };
+  </script>
+</body>
+</html>

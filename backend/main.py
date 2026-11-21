@@ -744,6 +744,13 @@ def serve_index11():
         return FileResponse(index_11_path)
     return FileResponse(index_html_path)
 
+@app.get("/jalrakshak_ncr_ai_flood_management_system.html")
+def serve_jalrakshak_legacy():
+    legacy_path = os.path.join(project_root, "jalrakshak_ncr_ai_flood_management_system.html")
+    if os.path.exists(legacy_path):
+        return FileResponse(legacy_path)
+    return FileResponse(index_html_path)
+
 if __name__ == "__main__":
     import uvicorn
     print("=" * 65)

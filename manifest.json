@@ -1,0 +1,42 @@
+{
+  "name": "NeerNetra — Gurugram Flood Command & Rescue",
+  "short_name": "NeerNetra",
+  "description": "Gurugram Municipal Flood Prevention, Hydrological Telemetry & Citizen SOS Rescue Command (NeerNetra)",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080D1A",
+  "theme_color": "#0284C7",
+  "categories": ["government", "navigation", "weather", "utilities"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192' fill='%230284C7'%3E%3Crect width='192' height='192' rx='36' fill='%23080D1A'/%3E%3Cpath d='M96 28 C96 28 48 88 48 124 C48 150.5 69.5 172 96 172 C122.5 172 144 150.5 144 124 C144 88 96 28 96 28 Z' fill='%230284C7'/%3E%3Cpath d='M76 128 C80 144 94 156 112 152' stroke='white' stroke-width='8' stroke-linecap='round' fill='none'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%230284C7'%3E%3Crect width='512' height='512' rx='96' fill='%23080D1A'/%3E%3Cpath d='M256 64 C256 64 128 224 128 320 C128 390.7 185.3 448 256 448 C326.7 448 384 390.7 384 320 C384 224 256 64 256 64 Z' fill='%230284C7'/%3E%3Cpath d='M200 330 C210 375 250 405 295 395' stroke='white' stroke-width='22' stroke-linecap='round' fill='none'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Citizen SOS Emergency",
+      "short_name": "SOS",
+      "description": "Trigger immediate emergency distress rescue dispatch",
+      "url": "/#sos",
+      "icons": [{ "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96' fill='%23DC2626'%3E%3Ccircle cx='48' cy='48' r='48'/%3E%3Ctext x='48' y='58' font-size='24' font-weight='bold' fill='white' text-anchor='middle'%3ESOS%3C/text%3E%3C/svg%3E", "sizes": "96x96" }]
+    },
+    {
+      "name": "Safe Navigation Routes",
+      "short_name": "Routes",
+      "description": "Find flood-free high-ground driving corridors in Gurugram",
+      "url": "/#routes",
+      "icons": [{ "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96' fill='%23059669'%3E%3Ccircle cx='48' cy='48' r='48'/%3E%3Ctext x='48' y='58' font-size='20' font-weight='bold' fill='white' text-anchor='middle'%3EMAP%3C/text%3E%3C/svg%3E", "sizes": "96x96" }]
+    }
+  ]
+}

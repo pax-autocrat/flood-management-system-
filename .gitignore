@@ -1,0 +1,40 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# SQLite databases (auto-initialized by backend/database.py on startup)
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup or temporary HTML snapshots
+*.11.html
+index.*.html
+
+# Logs & temp files
+*.log
+*.tmp
+*.bak
+.system_generated/
+browser_evidence/
+
+# Environment secrets
+.env
+.env.local
+*.env
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db

@@ -1,0 +1,33 @@
+{
+  "total_hotspots": 159,
+  "tier_breakdown": {
+    "tier_1_critical_trunk": 36,
+    "tier_2_arterial_culverts": 83,
+    "tier_3_ward_depressions": 40
+  },
+  "sensor_architecture": {
+    "tier_1_ip68_ultrasonic_and_float": 36,
+    "tier_2_cctv_virtual_gauges": 83,
+    "tier_3_crowd_and_si_ledger": 40
+  },
+  "leg_breakdown": {
+    "LEG_1_East_GolfCourse": 35,
+    "LEG_2_Central_OldGurugram": 49,
+    "LEG_3_West_BadshahpurTrunk": 75
+  },
+  "pareto_principle": {
+    "critical_choke_point_count": 32,
+    "critical_choke_point_pct_of_total": 20.1,
+    "systemic_flood_risk_share_pct": 81.0,
+    "pareto_statement": "32 critical trunk choke points account for 81.0% of Gurugram systemic flood accumulation."
+  },
+  "geographic_bounds": {
+    "min_lat": 28.372,
+    "max_lat": 28.518,
+    "min_lng": 76.92,
+    "max_lng": 77.155,
+    "elevation_min_m": 213.5,
+    "elevation_max_m": 255.0
+  },
+  "total_recommended_pump_hp": 9825
+}

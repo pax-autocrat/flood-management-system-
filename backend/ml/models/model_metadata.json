@@ -1,0 +1,29 @@
+{
+  "model_version": "1.0.0-NeerNetra",
+  "algorithm": "GradientBoostedTrees (Scikit-Learn)",
+  "features": [
+    "rainfall_mm_hr",
+    "cumulative_3h_rain_mm",
+    "elevation_m",
+    "catchment_area_sqkm",
+    "drain_silt_pct",
+    "pump_deployed",
+    "critical_infra_proximity"
+  ],
+  "accuracy_pct": 89.69,
+  "mae_cm": 6.5,
+  "r2_score": 0.9746,
+  "ci_half_width_cm": 18.0,
+  "feature_importances": {
+    "rainfall_mm_hr": 28.6,
+    "catchment_area_sqkm": 22.78,
+    "cumulative_3h_rain_mm": 18.77,
+    "pump_deployed": 17.55,
+    "elevation_m": 10.34,
+    "drain_silt_pct": 1.95,
+    "critical_infra_proximity": 0.01
+  },
+  "target_municipality": "Municipal Corporation of Gurugram (MCG)",
+  "deliverable": "Deliverable 2 - AI Predictive System Architecture",
+  "team": "NeerNetra"
+}

@@ -1,15 +1,15 @@
-# NeerNetra - JalRakshak NCR Prototype Launcher (PowerShell Native)
+# NeerNetra - AI Urban Flood Intelligence Launcher (PowerShell Native)
 # Team: NeerNetra | Lead & Backend Engineer: Kamal Shukla
 # SustainX 2026: The Sustainability Hackathon
 
-$Host.UI.RawUI.WindowTitle = "JalRakshak NCR - Gurugram Flood Command & AI Dispatch"
+$Host.UI.RawUI.WindowTitle = "NeerNetra - AI Urban Flood Intelligence & Rescue Command"
 Set-Location -Path $PSScriptRoot
 
 Clear-Host
 Write-Host "===============================================================================" -ForegroundColor Cyan
-Write-Host "  JalRakshak NCR -- Gurugram Flood Prevention & Algorithmic AI Dispatch" -ForegroundColor Cyan
-Write-Host "  Team NeerNetra | SustainX 2026: The Sustainability Hackathon" -ForegroundColor Yellow
-Write-Host "  Lead & Backend Engineer: Kamal Shukla" -ForegroundColor Green
+Write-Host "  NeerNetra -- AI Urban Flood Intelligence & Multi-Agency Rescue Command" -ForegroundColor Cyan
+Write-Host "  Municipal Corporation of Gurugram (MCG) & SDRF Response Grid" -ForegroundColor Yellow
+Write-Host "  Lead & Backend Engineer: Kamal Shukla | Team NeerNetra | SustainX 2026" -ForegroundColor Green
 Write-Host "===============================================================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  [SYSTEM CAPABILITIES ONLINE]" -ForegroundColor White
@@ -26,18 +26,15 @@ Write-Host "====================================================================
 Write-Host ""
 
 $venvPython = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
-$defaultUvPython = "C:\Users\kamal\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\python.exe"
 
 $pythonExe = if (Test-Path $venvPython) {
     $venvPython
-} elseif (Test-Path $defaultUvPython) {
-    $defaultUvPython
 } else {
     "python"
 }
 
 Write-Host "[*] Python Runtime: $pythonExe" -ForegroundColor Green
-Write-Host "[*] Booting FastAPI backend on http://127.0.0.1:8000 ..." -ForegroundColor Cyan
+Write-Host "[*] Booting NeerNetra Backend on http://127.0.0.1:8000 ..." -ForegroundColor Cyan
 Write-Host "[*] Launching interactive dashboard in your default browser..." -ForegroundColor Yellow
 Write-Host ""
 

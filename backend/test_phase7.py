@@ -108,12 +108,14 @@ def test_phase7_pwa_i18n_and_resilience():
     # -------------------------------------------------------------
     print("\n--- TEST 5: Bilingual Localization Dictionary Parity ---")
     # Parse JALRAKSHAK_I18N JSON structure from core script
-    dict_match = re.search(r'const JALRAKSHAK_I18N = ({[\s\S]*?});\n\n// =', core_code)
+    dict_match = re.search(r'const JALRAKSHAK_I18N = ({[\s\S]*?});\r?\n\r?\n// =', core_code)
     assert dict_match is not None, "Failed to extract JALRAKSHAK_I18N from jalrakshak_core.js"
     
     # Simple regex extraction of keys
     en_keys = set(re.findall(r'(\w+):\s*"[^"]*"', core_code[core_code.find('en: {'):core_code.find('hi: {')]))
-    hi_keys = set(re.findall(r'(\w+):\s*"[^"]*"', core_code[core_code.find('hi: {'):core_code.find('};\n\n// =')]))
+    hi_part = core_code[core_code.find('hi: {'):]
+    hi_part = hi_part[:hi_part.find('// =')] if '// =' in hi_part else hi_part
+    hi_keys = set(re.findall(r'(\w+):\s*"[^"]*"', hi_part))
     
     common_keys = en_keys.intersection(hi_keys)
     assert len(common_keys) >= 20, f"Expected >= 20 translated keys, got {len(common_keys)}"

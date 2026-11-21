@@ -672,37 +672,18 @@ def get_model_metadata():
 # Serve the static frontend index.html & index.11.html
 project_root = os.path.dirname(backend_dir)
 index_html_path = os.path.join(project_root, "index.html")
-index_11_path = os.path.join(project_root, "index.11.html")
 manifest_path = os.path.join(project_root, "manifest.json")
 service_worker_path = os.path.join(project_root, "service-worker.js")
 core_js_path = os.path.join(project_root, "jalrakshak_core.js")
-logo_png_path = os.path.join(project_root, "logo.png")
-logo_jpg_path = os.path.join(project_root, "logo.jpg")
-city_bg_path = os.path.join(project_root, "city_bg_render.jpg")
+jalrakshak_html_path = os.path.join(project_root, "jalrakshak_ncr_ai_flood_management_system.html")
+index_html_path = os.path.join(project_root, "index.html")
 
-@app.get("/logo.png")
-def serve_logo_png():
-    if os.path.exists(logo_png_path):
-        return FileResponse(logo_png_path, media_type="image/png")
-    raise HTTPException(status_code=404, detail="logo.png not found")
-
-@app.get("/logo.jpg")
-def serve_logo_jpg():
-    if os.path.exists(logo_jpg_path):
-        return FileResponse(logo_jpg_path, media_type="image/jpeg")
-    raise HTTPException(status_code=404, detail="logo.jpg not found")
-
-@app.get("/city_bg_render.jpg")
-def serve_city_bg():
-    if os.path.exists(city_bg_path):
-        return FileResponse(city_bg_path, media_type="image/jpeg")
-    raise HTTPException(status_code=404, detail="city_bg_render.jpg not found")
-
-@app.get("/login-bg.jpg")
-def serve_login_bg():
-    if os.path.exists(city_bg_path):
-        return FileResponse(city_bg_path, media_type="image/jpeg")
-    raise HTTPException(status_code=404, detail="login-bg.jpg not found")
+def get_frontend_file():
+    if os.path.exists(jalrakshak_html_path):
+        return jalrakshak_html_path
+    if os.path.exists(index_html_path):
+        return index_html_path
+    return None
 
 @app.get("/manifest.json")
 def serve_manifest():
@@ -728,28 +709,24 @@ def serve_core_js():
 
 @app.get("/")
 def serve_index():
-    if os.path.exists(index_html_path):
-        return FileResponse(index_html_path)
-    return {"message": "JalRakshak NCR API online. index.html not found."}
-
-@app.get("/index.html")
-def serve_index_direct():
-    if os.path.exists(index_html_path):
-        return FileResponse(index_html_path)
-    return FileResponse(index_11_path)
-
-@app.get("/index.11.html")
-def serve_index11():
-    if os.path.exists(index_11_path):
-        return FileResponse(index_11_path)
-    return FileResponse(index_html_path)
+    f = get_frontend_file()
+    if f:
+        return FileResponse(f)
+    return {"message": "NeerNetra API online. Frontend HTML not found."}
 
 @app.get("/jalrakshak_ncr_ai_flood_management_system.html")
 def serve_jalrakshak_legacy():
-    legacy_path = os.path.join(project_root, "jalrakshak_ncr_ai_flood_management_system.html")
-    if os.path.exists(legacy_path):
-        return FileResponse(legacy_path)
-    return FileResponse(index_html_path)
+    f = get_frontend_file()
+    if f:
+        return FileResponse(f)
+    raise HTTPException(status_code=404, detail="Frontend HTML not found")
+
+@app.get("/index.html")
+def serve_index_direct():
+    f = get_frontend_file()
+    if f:
+        return FileResponse(f)
+    raise HTTPException(status_code=404, detail="Frontend HTML not found")
 
 if __name__ == "__main__":
     import uvicorn

@@ -18,6 +18,16 @@ env/
 # Backup or temporary HTML snapshots
 *.11.html
 index.*.html
+index.html
+
+# Local documents & temporary assets
+*.docx
+*.pdf
+logo.*
+city_bg*
+login-bg*
+run.ps1
+run_tests.*
 
 # Logs & temp files
 *.log

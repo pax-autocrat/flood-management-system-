@@ -1,4 +1,4 @@
-# JalRakshak NCR — Gurugram Flood Prevention & AI Dispatch
+# NeerNetra — Gurugram Flood Prevention & AI Dispatch
 ### SustainX 2026: The Sustainability Hackathon (Great Lakes Institute of Management, Gurgaon)
 **Team:** `NeerNetra` &nbsp;|&nbsp; **Submission File:** `TeamNeerNetra-SustainX-R1.pdf` &nbsp;|&nbsp; **Lead & Backend Engineer:** `Kamal Shukla`
 
